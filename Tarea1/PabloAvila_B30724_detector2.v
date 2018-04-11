@@ -16,9 +16,9 @@
 
 module detector2(
   clock,	// Clock
-  rst,	// Reset: Active high, sync.
-  w, 	// Detector data input
-  z	// Detector output
+  rst,		// Reset: Active high, sync.
+  w, 			// Detector data input
+  z				// Detector output
   ); 
 
 //------------- Input Ports --------------------------------
@@ -31,33 +31,44 @@ module detector2(
 
 //------------- Internal Constants--------------------------
 parameter SIZE = 3;
-parameter IDLE  = 3'b001,GNT0 = 3'b010,GNT1 = 3'b100 ;
+parameter S0 = 3'b000, S1 = 3'b001, S2 = 3'b010,
+          S3 = 3'b011, S4 = 3'b100;  
 
 
 //------------- Internal Variables---------------------------
-reg   [SIZE-1:0]          state        ;// Seq part of the FSM
-reg   [SIZE-1:0]          next_state   ;// combo part of FSM
+reg [SIZE-1:0]	state        ; // Seq part of the FSM
+reg [SIZE-1:0]	next_state   ; // combo part of FSM
+reg             first_w;		 
 
 
 //------------- Next State Logic ----------------------------
 always @ (state)
-begin : FSM_COMBO
- next_state = 3'b000;
+begin : NEXT_STATE_LOGIC
+
  case(state)
-   IDLE : if (w == 1'b1)
-                next_state = GNT0;
-          else 
-                next_state = IDLE;
-   GNT0 : if (w == 1'b1)
-                next_state = GNT0;
+   S0 : begin
+          next_state = S1;
+					first_w = w;
+        end
+   S1 : if (w == first_w)
+                next_state = S2;
           else
-                next_state = IDLE;
-   GNT1 : if (w == 1'b1)
-                next_state = GNT1;
+                next_state = S0;
+   S2 : if (w == first_w)
+                next_state = S3;
           else
-                next_state = IDLE;
-   default : next_state = IDLE;
+                next_state = S0;
+   S3 : if (w == first_w)
+                next_state = S4;
+          else
+                next_state = S0;
+   S4 : if (w == first_w)
+                next_state = S4;
+          else
+                next_state = S0;
+   default : next_state = S0;
   endcase
+
 end
 
 //------------- Sequential Logic-----------------------------
@@ -65,7 +76,7 @@ always @ (posedge clock or posedge rst)
 begin : FSM_SEQ
 
   if (rst == 1'b1)
-    state <= IDLE;
+    state <= S0;
   else
     state <= next_state;
 
@@ -77,9 +88,11 @@ begin : OUTPUT_LOGIC
 
   case(state)
 
-    IDLE    : z <= 1'b0;
-    GNT0    : z <= 1'b0;
-    GNT1    : z <= 1'b1;
+    S0    	: z <= 1'b0;
+    S1    	: z <= 1'b0;
+    S2    	: z <= 1'b0;
+    S3    	: z <= 1'b0;
+    S4    	: z <= 1'b1;
     default : z <= 1'b0;
 
   endcase
@@ -113,7 +126,7 @@ initial begin
   $dumpfile("prueba.vcd");
   $dumpvars(0);
 
-  $monitor ("w=%b, z=%b", w, z);
+  $monitor ("w= %b, rst= %b, z= %b", w, rst, z);
   $display("\n***Simulation begin \n\n-----DETECTOR RTL -----");
 
 
@@ -123,18 +136,18 @@ initial begin
   w = 1;
   #10 w = 0; 
 
-  $display("\nCASE B: Four consecutive 1's with rst = 0");
+  $display("\nCASE B: Four consecutive 1's and 0's with rst = 0");
   #8 rst = 0;
   w = 1;
   #8 w = 0;
 
-  $display("\nCASE C: Five consecutive 1's with rst = 0");
+  $display("\nCASE C: Five consecutive 1's and 0's with rst = 0");
   #8 w = 1;
   #10 w = 0;
 
   $display("\nCASE D: Demonstration of asynchronous reset");
   #10 w =1;
-  #4.4 rst = 1;	 
+  #3.5 rst = 1;	 
 
   #4 $display("\n***Simulation end \n");
   $finish;

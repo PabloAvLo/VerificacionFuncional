@@ -38,36 +38,51 @@ parameter S0 = 3'b000, S1 = 3'b001, S2 = 3'b010,
 //------------- Internal Variables---------------------------
 reg [SIZE-1:0]	state        ; // Seq part of the FSM
 reg [SIZE-1:0]	next_state   ; // combo part of FSM
-reg             first_w;		 
+reg             last_w;		 
 
 
 //------------- Next State Logic ----------------------------
-always @ (state)
+always @ (state or w)
 begin : NEXT_STATE_LOGIC
 
  case(state)
    S0 : begin
           next_state = S1;
-					first_w = w;
-        end
-   S1 : if (w == first_w) 
+				  last_w = w;
+				end
+
+   S1 : begin
+					if (w == last_w)
                 next_state = S2;
           else
-                next_state = S0;
-   S2 : if (w == first_w)
+                next_state = S0;			
+				end
+
+   S2 : begin
+ 				  if (w == last_w)
                 next_state = S3;
           else
-                next_state = S0;
-   S3 : if (w == first_w)
+                next_state = S0;		
+				end
+
+   S3 : begin
+				  if (w == last_w)
                 next_state = S4;
           else
-                next_state = S0;
-   S4 : if (w == first_w)
+                next_state = S0;		
+				end
+
+   S4 : begin
+					if (w == last_w)
                 next_state = S4;
           else
-                next_state = S0;
-   default : next_state = S0;
-  endcase
+                next_state = S0;		
+				end
+
+   default : begin
+								next_state = S0;
+						 end  
+endcase
 
 end
 
@@ -134,7 +149,7 @@ initial begin
   clock = 0;
   rst = 1;
   w = 1;
-  #10 w = 0; 
+  #8 w = 0; 
 
   $display("\nCASE B: Four consecutive 1's and 0's with rst = 0");
   #8 rst = 0;
@@ -142,11 +157,11 @@ initial begin
   #8 w = 0;
 
   $display("\nCASE C: Five consecutive 1's and 0's with rst = 0");
-  #8 w = 1;
-  #10 w = 0;
+  #10 w = 1;
+  #12 w = 0;
 
   $display("\nCASE D: Demonstration of asynchronous reset");
-  #10 w =1;
+  #12 w =1;
   #3.5 rst = 1;	 
 
   #4 $display("\n***Simulation end \n");

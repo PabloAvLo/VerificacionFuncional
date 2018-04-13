@@ -47,43 +47,41 @@ begin : NEXT_STATE_LOGIC
 
  case(state)
    S0 : begin
-					if (w == 1)
-                next_state = S1;
-          else
-                next_state = S0;
+          next_state = S1;
+				  last_w = w;
 				end
 
    S1 : begin
-					if (w == 1)
+					if (w == last_w)
                 next_state = S2;
           else
                 next_state = S0;			
 				end
 
    S2 : begin
- 				  if (w == 1)
+ 				  if (w == last_w)
                 next_state = S3;
           else
                 next_state = S0;		
 				end
 
    S3 : begin
-				  if (w == 1)
+				  if (w == last_w)
                 next_state = S4;
           else
                 next_state = S0;		
 				end
 
    S4 : begin
-					if (w == 1)
+					if (w == last_w)
                 next_state = S4;
           else
                 next_state = S0;		
 				end
 
    default : begin
-					next_state = S0;
-				end  
+								next_state = S0;
+						 end  
 endcase
 
 end
@@ -151,7 +149,7 @@ initial begin
   clock = 0;
   rst = 1;
   w = 1;
-  #10 w = 0; 
+  #8 w = 0; 
 
   $display("\nCASE B: Four consecutive 1's and 0's with rst = 0");
   #8 rst = 0;
@@ -159,11 +157,11 @@ initial begin
   #8 w = 0;
 
   $display("\nCASE C: Five consecutive 1's and 0's with rst = 0");
-  #8 w = 1;
-  #10 w = 0;
+  #10 w = 1;
+  #12 w = 0;
 
   $display("\nCASE D: Demonstration of asynchronous reset");
-  #10 w =1;
+  #12 w =1;
   #3.5 rst = 1;	 
 
   #4 $display("\n***Simulation end \n");

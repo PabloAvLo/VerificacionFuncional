@@ -47,40 +47,38 @@ begin : NEXT_STATE_LOGIC
 
  case(state)
    S0 : begin
-          next_state = S1;
-					last_w = w;
-        end
-
-   S1 : begin
-					if (w == last_w)
-                next_state = S2;
+					if (w == 1)
+                next_state = S1;
           else
                 next_state = S0;
-				last_w = w;				
+				end
+
+   S1 : begin
+					if (w == 1)
+                next_state = S2;
+          else
+                next_state = S0;			
 				end
 
    S2 : begin
- 				  if (w == last_w)
+ 				  if (w == 1)
                 next_state = S3;
           else
-                next_state = S0;
-				last_w = w;				
+                next_state = S0;		
 				end
 
    S3 : begin
-				  if (w == last_w)
+				  if (w == 1)
                 next_state = S4;
           else
-                next_state = S0;
-				last_w = w;				
+                next_state = S0;		
 				end
 
    S4 : begin
-					if (w == last_w)
+					if (w == 1)
                 next_state = S4;
           else
-                next_state = S0;
-				last_w = w;				
+                next_state = S0;		
 				end
 
    default : begin

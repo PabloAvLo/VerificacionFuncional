@@ -10,17 +10,12 @@ SC_MODULE (sc_tb) {
   sc_out<bool>         w;     // data output
   sc_out<int>          done;  // Terminate sim
 
-//  void detector_model ();
-//  void monitor   ();
   void test      ();
 
-//  sc_uint<32>  cnt; // counter model
-//  int error; // Error status
-
   SC_CTOR(sc_tb) {
-//    SC_CTHREAD(monitor,clk.pos());
-//    SC_CTHREAD(detector_model,clk.pos());
-    SC_CTHREAD(test,clk.pos());
+    SC_THREAD(test);
+      sensitive << rst.pos();
+      sensitive << clk.pos();
   }
 };
 

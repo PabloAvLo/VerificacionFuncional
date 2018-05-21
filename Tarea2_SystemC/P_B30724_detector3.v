@@ -13,7 +13,7 @@
  entradas y salidas sincronicas.
 
 *****************************************************************************/
-`timescale 1s / 100ms
+`timescale 1ns / 100ps
 
 module detector(
   clk,	// Clock
@@ -145,61 +145,3 @@ initial begin
 end
 
 endmodule
-
-
-/*
-//------------- Test Bench -----------------------
-module detector_TestBench;
-
-//------------- Signals --------------------------
-reg clock, rst, w;
-wire z;
-
-//------------- Clock -----------------------------
-always begin
- #1 clock = ~clock;
-end
-
-//------------- Device Under Test ------------------
-detector Detector (
-.clock (clock),
-.rst (rst),
-.w (w),
-.z (z)
-);
-
-initial begin
-
-  $dumpfile("prueba.vcd");
-  $dumpvars(0);
-
-  $monitor ("w= %b, rst= %b, z= %b", w, rst, z);
-  $display("\n***Simulation begin \n\n-----DETECTOR RTL -----");
-
-
-  $display("\nCASE A: Four consecutive 1's and 0's with rst = 1");
-  clock = 0;
-  rst = 1;
-  w = 1;
-  #8 w = 0;
-
-  $display("\nCASE B: Four consecutive 1's and 0's with rst = 0");
-  #8 rst = 0;
-  w = 1;
-  #8 w = 0;
-
-  $display("\nCASE C: Five consecutive 1's and 0's with rst = 0");
-  #8 w = 1;
-  #10 w = 0;
-
-  $display("\nCASE D: Demonstration of asynchronous reset");
-  #10 w =1;
-  #8.3 rst = 1;
-
-  #4 $display("\n***Simulation end \n");
-  $finish;
-
-end
-
-endmodule
-*/

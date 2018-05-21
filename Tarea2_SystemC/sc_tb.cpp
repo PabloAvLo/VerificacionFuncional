@@ -1,7 +1,8 @@
 #include "sc_tb.h"
 
-// Counter model
-void sc_tb::cnt_model() {
+// Detector model
+/*
+void sc_tb::detector_model() {
   while (true) {
     wait();
     if (rst.read()) {
@@ -11,7 +12,8 @@ void sc_tb::cnt_model() {
     }
   }
 }
-// Counter montitor
+
+// Detector montitor
 void sc_tb::monitor() {
   error = 0;
   while (true) {
@@ -25,14 +27,38 @@ void sc_tb::monitor() {
     }
   }
 }
-// Counter stim gen
+*/
+// Detector stim gen
 void sc_tb::test() {
   done = 0;
   while (true) {
+    cout<<"@"<<sc_time_stamp()<<" ***Simulation begin \n-----DETECTOR RTL ----- " << endl;
+
+    cout<<"@"<<sc_time_stamp()<<" CASE A: Four consecutive 1's and 0's with rst = 1 " << endl;
     rst = true;
-    cout<<"@"<<sc_time_stamp()<<" Asserting Reset " << endl;
-    wait(10);
+    w = 1;
+    wait(8);
+    w = 0;
+
+    cout<<"@"<<sc_time_stamp()<<" CASE B: Four consecutive 1's and 0's with rst = 0 " << endl;
+    wait(8);
     rst = false;
+    w = 1;
+    wait(8);
+    w = 0;
+
+    cout<<"@"<<sc_time_stamp()<<" CASE C: Five consecutive 1's and 0's with rst = 0 " << endl;
+    wait(8);
+    w = 1;
+    wait(10);
+    w = 0;
+
+    cout<<"@"<<sc_time_stamp()<<" CASE D: Demonstration of asynchronous reset " << endl;
+    wait(10);
+    w = 1;
+    wait(8.3);
+    rst = true;
+/*
     cout<<"@"<<sc_time_stamp()<<" De-asserting Reset " << endl;
     wait(20);
     // Request for simulation termination
@@ -45,11 +71,9 @@ void sc_tb::test() {
       cout << " SIMULATION PASSED" << endl;
       cout << "=======================================" << endl;
     }
-    
+*/
     // Just wait for few cycles
     wait(100);
-    
     done = 1;
-    
   }
 }

@@ -9,43 +9,47 @@
 sc_tb  u_sc_tb("u_sc_tb");
 
 // Declare Signals
-sc_signal<bool>      clk;
-sc_signal<bool>      rst;
-sc_signal<sc_uint<32> >    d_out;
-sc_signal<int>      done;
-  
+sc_signal<bool>    clk;
+sc_signal<bool>    rst;
+sc_signal<sc_uint<32> >    w;
+sc_signal<bool>    z;
+sc_signal<int>     done;
+
 // Top-Level testbench
 void init_sc() {
   // Port mapping
   u_sc_tb.clk(clk);
   u_sc_tb.rst(rst);
-  u_sc_tb.d_out(d_out);
+  u_sc_tb.w(w);
+  u_sc_tb.z(z);
   u_sc_tb.done(done);
   // VCD Tracing:
   sc_trace_file* tf;
   tf = sc_create_vcd_trace_file("sc_tb");
   tf->set_time_unit(1, SC_NS);
-  
+
   //   Signals to be traced
   sc_trace(tf, clk, "clk");
   sc_trace(tf, rst, "rst");
-  sc_trace(tf, d_out, "d_out");
-  
+  sc_trace(tf, w, "w");
+  sc_trace(tf, z, "z");
+
   // Initialize SC
   sc_start();
-  
+
   cout<<"@"<<sc_time_stamp()<<" Started SystemC Scheduler"<<endl;
 }
 
 void sample_hdl(void *Invector) {
   INVECTOR *pInvector = (INVECTOR *)Invector;
   clk.write(pInvector->clk);
-  d_out.write(pInvector->d_out);
+  z.write(pInvector->z);
 }
 
 void drive_hdl(void *Outvector) {
   OUTVECTOR *pOutvector = (OUTVECTOR *)Outvector;
   pOutvector->rst  =  rst.read()? 1 : 0;
+  pOutvector->w    =  w.read()?   1 : 0;
   pOutvector->done =  done;
 }
 

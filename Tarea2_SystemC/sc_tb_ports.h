@@ -4,11 +4,12 @@
 // Define Complex Type of Input and Out for DUT
 struct tagInput {
   unsigned long  clk;
-  unsigned long  d_out;
+  unsigned long  z;
 };
 
 struct tagOutput {
   unsigned long  rst;
+  unsigned long  w;
   int done;
 };
 

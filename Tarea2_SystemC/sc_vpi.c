@@ -69,7 +69,7 @@ int sc_tb_interface(p_cb_data cb_data)
   value_s.value.integer = outvector.w;
   vpi_put_value(w, &value_s, 0, vpiNoDelay);
 
-  if (outvector.done ==1) {
+  if (outvector.done) {
 
      vpi_control(vpiFinish);
   }

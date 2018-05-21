@@ -117,7 +117,7 @@ endmodule // End of Module detector
 
 
 //------------- Test Bench Top Level --------------------
-module detector_TB();
+module tb();
 
 //------------- Signals --------------------------
 reg clk, rst, w;

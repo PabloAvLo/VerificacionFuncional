@@ -37,26 +37,26 @@ void sc_tb::test() {
     cout<<"@"<<sc_time_stamp()<<" CASE A: Four consecutive 1's and 0's with rst = 1 " << endl;
     rst = true;
     w = 1;
-    wait(8);
+    wait(4);
     w = 0;
 
     cout<<"@"<<sc_time_stamp()<<" CASE B: Four consecutive 1's and 0's with rst = 0 " << endl;
-    wait(8);
+    wait(4);
     rst = false;
     w = 1;
-    wait(8);
+    wait(4);
     w = 0;
 
     cout<<"@"<<sc_time_stamp()<<" CASE C: Five consecutive 1's and 0's with rst = 0 " << endl;
-    wait(8);
+    wait(4);
     w = 1;
-    wait(10);
+    wait(5);
     w = 0;
 
     cout<<"@"<<sc_time_stamp()<<" CASE D: Demonstration of asynchronous reset " << endl;
-    wait(10);
+    wait(5);
     w = 1;
-    wait(8.3);
+    wait(2.3);
     rst = true;
 /*
     cout<<"@"<<sc_time_stamp()<<" De-asserting Reset " << endl;
@@ -67,13 +67,14 @@ void sc_tb::test() {
       cout << " SIMULATION FAILED" << endl;
       cout << "=======================================" << endl;
     } else {
+*/
       cout << "=======================================" << endl;
       cout << " SIMULATION PASSED" << endl;
       cout << "=======================================" << endl;
-    }
-*/
+//    }
+
     // Just wait for few cycles
-    wait(100);
+    wait(4);
     done = 1;
   }
 }

@@ -7,7 +7,7 @@ SC_MODULE (sc_tb) {
   sc_in<bool>          clk;   // clock input
   sc_in<bool>          z;     // data input
   sc_out<bool>         rst;   // reset ouput
-  sc_out<sc_uint<32> >         w;     // data output
+  sc_out<bool>         w;     // data output
   sc_out<int>          done;  // Terminate sim
 
 //  void detector_model ();

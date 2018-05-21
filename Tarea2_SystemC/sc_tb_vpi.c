@@ -11,7 +11,7 @@ sc_tb  u_sc_tb("u_sc_tb");
 // Declare Signals
 sc_signal<bool>    clk;
 sc_signal<bool>    rst;
-sc_signal<sc_uint<32> >    w;
+sc_signal<bool>    w;
 sc_signal<bool>    z;
 sc_signal<int>     done;
 

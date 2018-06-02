@@ -11,3 +11,9 @@
     2 -> 16 bit SDRAM Mode
     4 -> 32 bit SDRAM Mode   */
 #define SDR_BW   1
+
+#define dw       32 // Data width
+#define APP_AW   26 // Application Address Width
+
+#define SDR_RFSH_TIMER_W    12
+#define SDR_RFSH_ROW_CNT_W  3

@@ -1,50 +1,50 @@
 /*********************************************************************
-                                                              
-  SDRAM Controller Bank Controller
-                                                              
-  This file is part of the sdram controller project           
-  http://www.opencores.org/cores/sdr_ctrl/                    
-                                                              
-  Description: 
-    This module takes requests from sdrc_req_gen, checks for page hit/miss and
-    issues precharge/activate commands and then passes the request to sdrc_xfr_ctl. 
-                                                              
-  To Do:                                                      
-    nothing                                                   
-                                                              
-  Author(s):                                                  
-      - Dinesh Annayya, dinesha@opencores.org                 
-  Version  :  1.0  - 8th Jan 2012
-                                                              
 
-                                                             
- Copyright (C) 2000 Authors and OPENCORES.ORG                
-                                                             
- This source file may be used and distributed without         
- restriction provided that this copyright statement is not    
- removed from the file and that any derivative work contains  
- the original copyright notice and the associated disclaimer. 
-                                                              
- This source file is free software; you can redistribute it   
- and/or modify it under the terms of the GNU Lesser General   
- Public License as published by the Free Software Foundation; 
- either version 2.1 of the License, or (at your option) any   
-later version.                                               
-                                                              
- This source is distributed in the hope that it will be       
- useful, but WITHOUT ANY WARRANTY; without even the implied   
- warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR      
- PURPOSE.  See the GNU Lesser General Public License for more 
- details.                                                     
-                                                              
- You should have received a copy of the GNU Lesser General    
- Public License along with this source; if not, download it   
- from http://www.opencores.org/lgpl.shtml                     
-                                                              
+  SDRAM Controller Bank Controller
+
+  This file is part of the sdram controller project
+  http://www.opencores.org/cores/sdr_ctrl/
+
+  Description:
+    This module takes requests from sdrc_req_gen, checks for page hit/miss and
+    issues precharge/activate commands and then passes the request to sdrc_xfr_ctl.
+
+  To Do:
+    nothing
+
+  Author(s):
+      - Dinesh Annayya, dinesha@opencores.org
+  Version  :  1.0  - 8th Jan 2012
+
+
+
+ Copyright (C) 2000 Authors and OPENCORES.ORG
+
+ This source file may be used and distributed without
+ restriction provided that this copyright statement is not
+ removed from the file and that any derivative work contains
+ the original copyright notice and the associated disclaimer.
+
+ This source file is free software; you can redistribute it
+ and/or modify it under the terms of the GNU Lesser General
+ Public License as published by the Free Software Foundation;
+ either version 2.1 of the License, or (at your option) any
+later version.
+
+ This source is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied
+ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the GNU Lesser General Public License for more
+ details.
+
+ You should have received a copy of the GNU Lesser General
+ Public License along with this source; if not, download it
+ from http://www.opencores.org/lgpl.shtml
+
 *******************************************************************/
 
 
-`include "sdrc_define.v"
+`include "../rtl/core/sdrc_define.v"
 
 module sdrc_bank_fsm (clk,
 		     reset_n,
@@ -72,7 +72,7 @@ module sdrc_bank_fsm (clk,
 		     b2x_len,	   // transfer length
 		     b2x_cmd,	   // transfer command
 		     x2b_ack,	   // command accepted
-		     
+
 		     /* Status to/from xfr_ctl */
 		     tras_ok,      // TRAS OK for this bank
 		     xfr_ok,
@@ -89,9 +89,9 @@ module sdrc_bank_fsm (clk,
 		     tras_delay,   // Active to precharge delay
 		     trp_delay,	   // Precharge to active delay
 		     trcd_delay);  // Active to R/W delay
-   
 
-parameter  SDR_DW   = 16;  // SDR Data Width 
+
+parameter  SDR_DW   = 16;  // SDR Data Width
 parameter  SDR_BW   = 2;   // SDR Byte Width
 
    input                        clk, reset_n;
@@ -118,7 +118,7 @@ parameter  SDR_BW   = 2;   // SDR Byte Width
    /* Status from xfr_ctl */
    input 			x2b_refresh, x2b_act_ok, x2b_rdok,
 				x2b_wrok, x2b_pre_ok, xfr_ok;
-   
+
    input [3:0] 			tras_delay, trp_delay, trcd_delay;
 
    output [12:0] 			bank_row;
@@ -151,9 +151,9 @@ parameter  SDR_BW   = 2;   // SDR Byte Width
    reg [12:0] 			l_caddr;
    reg                          l_sdr_dma_last;
    reg                          bank_prech_page_closed;
-   
+
    wire  			tras_ok_internal, tras_ok, activate_bank;
-   
+
    wire 			page_hit, timer0_tc_t, ld_trp, ld_trcd;
 
    /*** Timing Break Logic Added for FPGA - Start ****/
@@ -208,16 +208,16 @@ parameter  SDR_BW   = 2;   // SDR Byte Width
 
 	 tras_cntr <= (activate_bank) ? tras_delay :
 		      (~tras_ok_internal) ? tras_cntr - 4'b1 : 4'b0;
-	 
+
 	 timer0 <= (ld_trp) ? trp_delay :
 		   (ld_trcd) ? trcd_delay :
 		   (timer0 != 'h0) ? timer0 - 4'b1 : timer0;
-	 
+
 	 bank_st <= next_bank_st;
 
       end // else: !if(~reset_n)
 
-   always @ (posedge clk) begin 
+   always @ (posedge clk) begin
 
       bank_row <= (bank_st == `BANK_ACT) ? b2x_addr : bank_row;
 
@@ -247,7 +247,7 @@ parameter  SDR_BW   = 2;   // SDR Byte Width
       end
 
    end // always @ (posedge clk)
-   
+
    assign tras_ok_internal = ~|tras_cntr;
 
    assign activate_bank = (b2x_cmd == `OP_ACT) & x2b_ack;
@@ -259,7 +259,7 @@ parameter  SDR_BW   = 2;   // SDR Byte Width
    assign ld_trp = (b2x_cmd == `OP_PRE) ? x2b_ack : 1'b0;
 
    assign ld_trcd = (b2x_cmd == `OP_ACT) ? x2b_ack : 1'b0;
-   
+
 
 
    always @ (*) begin
@@ -278,10 +278,10 @@ parameter  SDR_BW   = 2;   // SDR Byte Width
 	             if (~r2b_req) begin
 	                next_bank_st = `BANK_IDLE;
 	             end // if (~r2b_req)
-	             else if (page_hit) begin 
+	             else if (page_hit) begin
 	                b2r_ack = 1'b1;
 	                b2x_cmd_t = (r2b_write) ? `OP_WR : `OP_RD;
-	                next_bank_st = `BANK_XFR;  
+	                next_bank_st = `BANK_XFR;
 	             end // if (page_hit)
 	             else begin  // page_miss
 	                b2r_ack = 1'b1;
@@ -297,8 +297,8 @@ parameter  SDR_BW   = 2;   // SDR Byte Width
 	                b2x_addr = 13'bx;
 	                next_bank_st = `BANK_IDLE;
 	             end // if (~r2b_req)
-	             else if (page_hit) begin 
-	                b2x_req = (r2b_write) ? x2b_wrok_t & xfr_ok_t : 
+	             else if (page_hit) begin
+	                b2x_req = (r2b_write) ? x2b_wrok_t & xfr_ok_t :
 			                       x2b_rdok_t & xfr_ok_t;
 	                b2x_cmd_t = (r2b_write) ? `OP_WR : `OP_RD;
 	                b2r_ack = 1'b1;
@@ -332,15 +332,15 @@ parameter  SDR_BW   = 2;   // SDR Byte Width
            bank_prech_page_closed = 1'b0;
 	   next_bank_st = (x2b_ack) ? `BANK_XFR : `BANK_ACT;
 	end // case: `BANK_ACT
-	
+
 	`BANK_XFR : begin
 	   b2x_req = (l_write) ? timer0_tc & x2b_wrok_t & xfr_ok_t :
-		     timer0_tc & x2b_rdok_t & xfr_ok_t; 
+		     timer0_tc & x2b_rdok_t & xfr_ok_t;
 	   b2x_cmd_t = (l_write) ? `OP_WR : `OP_RD;
 	   b2r_ack = 1'b0;
 	   b2x_addr = l_caddr;
            bank_prech_page_closed = 1'b0;
-	   next_bank_st = (x2b_refresh) ? `BANK_ACT : 
+	   next_bank_st = (x2b_refresh) ? `BANK_ACT :
                           (x2b_ack & l_sdr_dma_last) ? `BANK_DMA_LAST_PRE :
 			  (x2b_ack) ? `BANK_IDLE : `BANK_XFR;
 	end // case: `BANK_XFR
@@ -353,7 +353,7 @@ parameter  SDR_BW   = 2;   // SDR Byte Width
            bank_prech_page_closed = 1'b1;
 	   next_bank_st = (x2b_ack) ? `BANK_IDLE : `BANK_DMA_LAST_PRE;
 	end // case: `BANK_DMA_LAST_PRE
-          
+
       endcase // case(bank_st)
 
    end // always @ (bank_st or ...)
@@ -367,5 +367,5 @@ parameter  SDR_BW   = 2;   // SDR Byte Width
    assign b2x_len = (bank_st == `BANK_IDLE) ? r2b_len : l_len;
 
    assign b2x_wrap = (bank_st == `BANK_IDLE) ? r2b_wrap : l_wrap;
-   
+
 endmodule // sdr_bank_fsm

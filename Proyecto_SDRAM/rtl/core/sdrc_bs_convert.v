@@ -1,54 +1,54 @@
 /*********************************************************************
-                                                              
-  SDRAM Controller buswidth converter                                  
-                                                              
-  This file is part of the sdram controller project           
-  http://www.opencores.org/cores/sdr_ctrl/                    
-                                                              
+
+  SDRAM Controller buswidth converter
+
+  This file is part of the sdram controller project
+  http://www.opencores.org/cores/sdr_ctrl/
+
   Description: SDRAM Controller Buswidth converter
 
   This module does write/read data transalation between
      application data to SDRAM bus width
-                                                              
-  To Do:                                                      
-    nothing                                                   
-                                                              
-  Author(s):                                                  
-      - Dinesh Annayya, dinesha@opencores.org                 
+
+  To Do:
+    nothing
+
+  Author(s):
+      - Dinesh Annayya, dinesha@opencores.org
   Version  :  0.0  - 8th Jan 2012 - Initial structure
               0.2 - 2nd Feb 2012
 	         Improved the command pipe structure to accept up-to 4 command of different bank.
 	      0.3 - 6th Feb 2012
 	         Bug fix on read valid generation
-                                                              
 
-                                                             
- Copyright (C) 2000 Authors and OPENCORES.ORG                
-                                                             
- This source file may be used and distributed without         
- restriction provided that this copyright statement is not    
- removed from the file and that any derivative work contains  
- the original copyright notice and the associated disclaimer. 
-                                                              
- This source file is free software; you can redistribute it   
- and/or modify it under the terms of the GNU Lesser General   
- Public License as published by the Free Software Foundation; 
- either version 2.1 of the License, or (at your option) any   
-later version.                                               
-                                                              
- This source is distributed in the hope that it will be       
- useful, but WITHOUT ANY WARRANTY; without even the implied   
- warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR      
- PURPOSE.  See the GNU Lesser General Public License for more 
- details.                                                     
-                                                              
- You should have received a copy of the GNU Lesser General    
- Public License along with this source; if not, download it   
- from http://www.opencores.org/lgpl.shtml                     
-                                                              
+
+
+ Copyright (C) 2000 Authors and OPENCORES.ORG
+
+ This source file may be used and distributed without
+ restriction provided that this copyright statement is not
+ removed from the file and that any derivative work contains
+ the original copyright notice and the associated disclaimer.
+
+ This source file is free software; you can redistribute it
+ and/or modify it under the terms of the GNU Lesser General
+ Public License as published by the Free Software Foundation;
+ either version 2.1 of the License, or (at your option) any
+later version.
+
+ This source is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied
+ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the GNU Lesser General Public License for more
+ details.
+
+ You should have received a copy of the GNU Lesser General
+ Public License along with this source; if not, download it
+ from http://www.opencores.org/lgpl.shtml
+
 *******************************************************************/
 
-`include "sdrc_define.v"
+`include "../rtl/core/sdrc_define.v"
 module sdrc_bs_convert (
                     clk                 ,
                     reset_n             ,
@@ -77,12 +77,12 @@ module sdrc_bs_convert (
 
 
 parameter  APP_AW   = 30;  // Application Address Width
-parameter  APP_DW   = 32;  // Application Data Width 
+parameter  APP_DW   = 32;  // Application Data Width
 parameter  APP_BW   = 4;   // Application Byte Width
 
-parameter  SDR_DW   = 16;  // SDR Data Width 
+parameter  SDR_DW   = 16;  // SDR Data Width
 parameter  SDR_BW   = 2;   // SDR Byte Width
-   
+
 input                    clk              ;
 input                    reset_n          ;
 input [1:0]              sdr_width        ; // 2'b00 - 32 Bit SDR, 2'b01 - 16 Bit SDR, 2'b1x - 8 Bit
@@ -153,7 +153,7 @@ always @(*) begin
                 a2x_wren_n      = app_wr_en_n[1:0];
                 a2x_wrdt        = app_wr_data[15:0];
               end
-            
+
             app_rd_data = {x2a_rddt,saved_rd_data[15:0]};
         end else  // 8 Bit SDR Mode
         begin
@@ -179,7 +179,7 @@ always @(*) begin
                 a2x_wren_n      = app_wr_en_n[0];
                 a2x_wrdt        = app_wr_data[7:0];
             end
-            
+
             app_rd_data         = {x2a_rddt,saved_rd_data[23:0]};
           end
      end
@@ -216,7 +216,7 @@ always @(posedge clk)
         if(x2a_rdok) begin
 	   if(sdr_width == 2'b01) // 16 Bit SDR Mode
 	      saved_rd_data[15:0]  <= x2a_rddt;
-            else begin// 8 bit SDR Mode - 
+            else begin// 8 bit SDR Mode -
 	       if(rd_xfr_count[1:0] == 2'b00)      saved_rd_data[7:0]   <= x2a_rddt[7:0];
 	       else if(rd_xfr_count[1:0] == 2'b01) saved_rd_data[15:8]  <= x2a_rddt[7:0];
 	       else if(rd_xfr_count[1:0] == 2'b10) saved_rd_data[23:16] <= x2a_rddt[7:0];

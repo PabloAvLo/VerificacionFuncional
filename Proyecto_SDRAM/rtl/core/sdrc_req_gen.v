@@ -1,10 +1,10 @@
 /*********************************************************************
-                                                              
-  SDRAM Controller Request Generation                                  
-                                                              
-  This file is part of the sdram controller project           
-  http://www.opencores.org/cores/sdr_ctrl/                    
-                                                              
+
+  SDRAM Controller Request Generation
+
+  This file is part of the sdram controller project
+  http://www.opencores.org/cores/sdr_ctrl/
+
   Description: SDRAM Controller Reguest Generation
 
   Address Generation Based on cfg_colbits
@@ -27,54 +27,54 @@
 
   The SDRAMs are operated in 4 beat burst mode.
 
-  If Wrap = 0; 
-      If the current burst cross the page boundary, then this block split the request 
+  If Wrap = 0;
+      If the current burst cross the page boundary, then this block split the request
       into two coressponding change in address and request length
 
   if the current burst cross the page boundar.
-  This module takes requests from the memory controller, 
-  chops them to page boundaries if wrap=0, 
+  This module takes requests from the memory controller,
+  chops them to page boundaries if wrap=0,
   and passes the request to bank_ctl
 
-  Note: With Wrap = 0, each request from Application layer will be splited into two request, 
-	if the current burst cross the page boundary. 
+  Note: With Wrap = 0, each request from Application layer will be splited into two request,
+	if the current burst cross the page boundary.
 
-  To Do:                                                      
-    nothing                                                   
-                                                              
-  Author(s):                                                  
-      - Dinesh Annayya, dinesha@opencores.org                 
+  To Do:
+    nothing
+
+  Author(s):
+      - Dinesh Annayya, dinesha@opencores.org
   Version  : 0.0 - 8th Jan 2012
              0.1 - 5th Feb 2012, column/row/bank address are register to improve the timing issue in FPGA synthesis
-                                                              
 
-                                                             
- Copyright (C) 2000 Authors and OPENCORES.ORG                
-                                                             
- This source file may be used and distributed without         
- restriction provided that this copyright statement is not    
- removed from the file and that any derivative work contains  
- the original copyright notice and the associated disclaimer. 
-                                                              
- This source file is free software; you can redistribute it   
- and/or modify it under the terms of the GNU Lesser General   
- Public License as published by the Free Software Foundation; 
- either version 2.1 of the License, or (at your option) any   
-later version.                                               
-                                                              
- This source is distributed in the hope that it will be       
- useful, but WITHOUT ANY WARRANTY; without even the implied   
- warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR      
- PURPOSE.  See the GNU Lesser General Public License for more 
- details.                                                     
-                                                              
- You should have received a copy of the GNU Lesser General    
- Public License along with this source; if not, download it   
- from http://www.opencores.org/lgpl.shtml                     
-                                                              
+
+
+ Copyright (C) 2000 Authors and OPENCORES.ORG
+
+ This source file may be used and distributed without
+ restriction provided that this copyright statement is not
+ removed from the file and that any derivative work contains
+ the original copyright notice and the associated disclaimer.
+
+ This source file is free software; you can redistribute it
+ and/or modify it under the terms of the GNU Lesser General
+ Public License as published by the Free Software Foundation;
+ either version 2.1 of the License, or (at your option) any
+later version.
+
+ This source is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied
+ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the GNU Lesser General Public License for more
+ details.
+
+ You should have received a copy of the GNU Lesser General
+ Public License along with this source; if not, download it
+ from http://www.opencores.org/lgpl.shtml
+
 *******************************************************************/
 
-`include "sdrc_define.v"
+`include "../rtl/core/sdrc_define.v"
 
 module sdrc_req_gen (clk,
 		    reset_n,
@@ -89,7 +89,7 @@ module sdrc_req_gen (clk,
 		    req_wrap,	        // Wrap mode request (xfr_len = 4)
 		    req_wr_n,	        // 0 => Write request, 1 => read req
 		    req_ack,	        // Request has been accepted
-		    
+
 		    /* Req to xfr_ctl */
 		    r2x_idle,
 
@@ -109,11 +109,11 @@ module sdrc_req_gen (clk,
 		    );
 
 parameter  APP_AW   = 26;  // Application Address Width
-parameter  APP_DW   = 32;  // Application Data Width 
+parameter  APP_DW   = 32;  // Application Data Width
 parameter  APP_BW   = 4;   // Application Byte Width
 parameter  APP_RW   = 9;   // Application Request Width
 
-parameter  SDR_DW   = 16;  // SDR Data Width 
+parameter  SDR_DW   = 16;  // SDR Data Width
 parameter  SDR_BW   = 2;   // SDR Byte Width
 
 
@@ -122,16 +122,16 @@ input                   reset_n       ;
 input [1:0]             cfg_colbits   ; // 2'b00 - 8 Bit column address, 2'b01 - 9 Bit, 10 - 10 bit, 11 - 11Bits
 
 /* Request from app */
-input 			req           ; // Request 
+input 			req           ; // Request
 input [`SDR_REQ_ID_W-1:0] req_id      ; // Request ID
 input [APP_AW-1:0] 	req_addr      ; // Request Address
 input [APP_RW-1:0] 	req_len       ; // Request length
 input 			req_wr_n      ; // 0 -Write, 1 - Read
 input                   req_wrap      ; // 1 - Wrap the Address on page boundary
 output 			req_ack       ; // Request Ack
-		
+
 /* Req to bank_ctl */
-output 			r2x_idle      ; 
+output 			r2x_idle      ;
 output                  r2b_req       ; // Request
 output                  r2b_start     ; // First Junk of the Burst Access
 output                  r2b_last      ; // Last Junk of the Burst Access
@@ -146,7 +146,7 @@ input 			b2r_ack       ; // Request Ack
 input                   b2r_arb_ok    ; // Bank controller fifo is not full and ready to accept the command
 //
 input [1:0] 	        sdr_width; // 2'b00 - 32 Bit, 2'b01 - 16 Bit, 2'b1x - 8Bit
-                                         
+
 
    /****************************************************************************/
    // Internal Nets
@@ -156,7 +156,7 @@ input [1:0] 	        sdr_width; // 2'b00 - 32 Bit, 2'b01 - 16 Bit, 2'b1x - 8Bit
    `define REQ_PAGE_WRAP   2'b10
 
    reg  [1:0]		req_st, next_req_st;
-   reg 			r2x_idle, req_ack, r2b_req, r2b_start, 
+   reg 			r2x_idle, req_ack, r2b_req, r2b_start,
 			r2b_write, req_idle, req_ld, lcl_wrap;
    reg [`SDR_REQ_ID_W-1:0] 	r2b_req_id;
    reg [`REQ_BW-1:0] 	lcl_req_len;
@@ -208,19 +208,19 @@ end
 			(cfg_colbits == 2'b10) ? (12'h400 - {2'b0, req_addr_int[9:0]}) : (12'h800 - {1'b0, req_addr_int[10:0]});
 
 
-     // If the wrap = 0 and current application burst length is crossing the page boundary, 
+     // If the wrap = 0 and current application burst length is crossing the page boundary,
      // then request will be split into two with corresponding change in request address and request length.
      //
-     // If the wrap = 0 and current burst length is not crossing the page boundary, 
+     // If the wrap = 0 and current burst length is not crossing the page boundary,
      // then request from application layer will be transparently passed on the bank control block.
 
      //
-     // if the wrap = 1, then this block will not modify the request address and length. 
-     // The wrapping functionality will be handle by the bank control module and 
+     // if the wrap = 1, then this block will not modify the request address and length.
+     // The wrapping functionality will be handle by the bank control module and
      // column address will rewind back as follows XX -> FF ? 00 ? 1
      //
-     // Note: With Wrap = 0, each request from Application layer will be spilited into two request, 
-     //	if the current burst cross the page boundary. 
+     // Note: With Wrap = 0, each request from Application layer will be spilited into two request,
+     //	if the current burst cross the page boundary.
    assign page_ovflw = ({1'b0, req_len_int} > max_r2b_len) ? ~r2b_wrap : 1'b0;
 
    assign r2b_len = r2b_start ? ((page_ovflw_r) ? max_r2b_len_r : lcl_req_len) :
@@ -250,7 +250,7 @@ end
       r2b_req_id     <= (req_ack) ? req_id : r2b_req_id;
 
       lcl_wrap       <= (req_ack) ? req_wrap : lcl_wrap;
-	     
+
       lcl_req_len    <= (req_ack) ? req_len_int  :
 		        (req_ld) ? next_req_len : lcl_req_len;
 
@@ -258,7 +258,7 @@ end
 		        (req_ld) ? next_sdr_addr : curr_sdr_addr;
 
    end // always @ (posedge clk)
-   
+
    always @ (*) begin
       r2x_idle    = 1'b0;
       req_idle    = 1'b0;
@@ -335,6 +335,6 @@ always @ (posedge clk) begin
     r2b_raddr <= (cfg_colbits == 2'b00)  ? map_address[22:10] :
 	         (cfg_colbits == 2'b01)  ? map_address[23:11] :
 	         (cfg_colbits == 2'b10)  ? map_address[24:12] : map_address[25:13];
-end	   
-   
+end
+
 endmodule // sdr_req_gen

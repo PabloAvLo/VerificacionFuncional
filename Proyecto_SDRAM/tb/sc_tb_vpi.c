@@ -10,7 +10,7 @@ sc_tb    u_sc_tb("u_sc_tb");
   // WB bus
   sc_signal<bool>               wb_clk_i;
   sc_signal<bool>               wb_ack_o;
-  sc_signal< sc_uint<dw> >      wb_dat_o;
+  sc_signal< sc_uint<DW> >      wb_dat_o;
   // Interface to SDRAM
   sc_signal<bool>               sdram_clk;
   sc_signal<bool>               sdr_cs_n;   // SDRAM Chip Select
@@ -37,10 +37,10 @@ sc_tb    u_sc_tb("u_sc_tb");
   sc_signal<bool>               wb_stb_i;
   sc_signal< sc_uint<APP_AW> >  wb_addr_i;
   sc_signal<bool>               wb_we_i;
-  sc_signal< sc_uint<dw> >      wb_dat_i;
-  sc_signal< sc_uint<dw/8> >    wb_sel_i;
+  sc_signal< sc_uint<DW> >      wb_dat_i;
+  sc_signal< sc_uint<DW/8> >    wb_sel_i;
   sc_signal<bool>               wb_cyc_i;
-  sc_signal< sc_uint<3>         wb_cti_i;
+  sc_signal< sc_uint<3> >       wb_cti_i;
   // Interface to SDRAM
   sc_signal<bool>               sdram_resetn;
   // Parameters

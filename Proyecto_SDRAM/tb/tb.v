@@ -11,10 +11,10 @@ reg [1:0]         cfg_colbits;
 // WB bus
 reg               wb_rst_i;
 reg               wb_stb_i;
-reg [APP_AW-1:0]  wb_addr_i;
+reg [`APP_AW-1:0]  wb_addr_i;
 reg               wb_we_i;
-reg [dw-1:0]      wb_dat_i;
-reg [dw/8-1:0]    wb_sel_i;
+reg [`dw-1:0]      wb_dat_i;
+reg [`dw/8-1:0]    wb_sel_i;
 reg               wb_cyc_i;
 reg [2:0]         wb_cti_i;
 // Interface to SDRAM
@@ -30,39 +30,39 @@ reg [3:0]         cfg_sdr_trcd_d;
 reg [2:0]         cfg_sdr_cas;
 reg [3:0]         cfg_sdr_trcar_d;
 reg [3:0]         cfg_sdr_twr_d;
-reg [SDR_RFSH_TIMER_W-1:0]    cfg_sdr_rfsh;
-reg [SDR_RFSH_ROW_CNT_W-1:0]  cfg_sdr_rfmax;
+reg [`SDR_RFSH_TIMER_W-1:0]    cfg_sdr_rfsh;
+reg [`SDR_RFSH_ROW_CNT_W-1:0]  cfg_sdr_rfmax;
 
 wire              wb_ack_o;
-wire [dw-1:0]     wb_dat_o;
+wire [`dw-1:0]     wb_dat_o;
   // Interface to SDRAM
-wire              sdram_clk;
 wire              sdr_cs_n;
 wire              sdr_cke;
 wire              sdr_ras_n;
 wire              sdr_cas_n;
 wire              sdr_we_n;
-wire [SDR_BW-1:0] sdr_dqm;
+wire [`SDR_BW-1:0] sdr_dqm;
 wire [1:0]        sdr_ba;
 wire [12:0]       sdr_addr;
-wire [SDR_DW-1:0] sdr_dq;
+wire [`SDR_DW-1:0] sdr_dq;
 
 
 initial begin
  $dumpfile("verilog.vcd");
  $dumpvars(0);
  $display("[DUT]: Starting...");
- $sc_tb;// Testbench Connection
+ $sc_tb;  // Testbench Connection
  sys_clk   = 0;
  sdram_clk = 0;
 end
 
 // Clock generator
-always #(P_SYS/2) sys_clk   = ~sys_clk;
-always #(P_SDR/2) sdram_clk = ~sdram_clk;
+always #(`P_SYS/2) sys_clk   = ~sys_clk;
+always #(`P_SDR/2) sdram_clk = ~sdram_clk;
 
 // DUT connection
-sdrc_top dut (
+sdrc_top #(.SDR_DW(`SDR_DW),.SDR_BW(`SDR_BW),.dw(`dw),.APP_AW(`APP_AW))
+  dut (
 
     cfg_sdr_width       ,
     cfg_colbits         ,

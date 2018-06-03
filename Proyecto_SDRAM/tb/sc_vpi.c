@@ -48,7 +48,7 @@ int sc_tb_interface(p_cb_data cb_data)
 
   // Input Signals
   // WB bus
-  vpiHandle wb_clk_i          = vpi_handle_by_name("tb.wb_clk_i", NULL);
+  vpiHandle wb_clk_i          = vpi_handle_by_name("tb.sys_clk", NULL);
   vpiHandle wb_ack_o          = vpi_handle_by_name("tb.wb_ack_o", NULL);
   vpiHandle wb_dat_o          = vpi_handle_by_name("tb.wb_dat_o", NULL);
   // Interface to SDRAM

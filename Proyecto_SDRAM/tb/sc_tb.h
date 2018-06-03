@@ -104,7 +104,7 @@ SC_MODULE (monitor) {
     intf_int=intf_ext;
     //Scoreboard
     //scb_int = scb_ext;
-    SC_THREAD(mnt_out);
+    //SC_THREAD(mnt_out);
       //sensitive << intf_int->rd_en.pos();
   }
 

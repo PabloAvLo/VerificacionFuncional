@@ -84,10 +84,14 @@ SC_MODULE (driver) {
     //scb_int = scb_ext;
   }
 
-  void reset();
-  void write();
-  void read();
-
+  void NOP();
+  void Active();
+  double Read(sc_uint<8> &address);
+  void Write(sc_uint<8> &address);
+  void BurstTerminate();
+  void Recharge();
+  void AutoRefresh();
+  void LoadModeRegister();
 };
 
 SC_MODULE (monitor) {

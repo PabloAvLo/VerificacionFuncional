@@ -84,13 +84,35 @@ void driver::LoadModeRegister(){
   cout<<"@"<<sc_time_stamp()<<" Finished Load Mode Register " << endl;
 }
 
+void driver::initializationTopWishbone(){
+   intf_int->wb_addr_i      = 0;
+   intf_int->wb_dat_i       = 0;
+   intf_int->wb_sel_i       = 0x0;
+   intf_int->wb_we_i        = false;
+   intf_int->wb_stb_i       = 0;
+   intf_int->wb_cyc_i       = 0;
+   intf_int->wb_rst_i       = 0;
+   intf_int->sdram_resetn   = 1;
+  wait(50);
 
+  // Applying reset
+  intf_int->wb_rst_i       = 1;
+  intf_int->sdram_resetn   = 0;
+  wait(5000);
 
+  // Releasing reset
+  intf_int->wb_rst_i       = 0;
+  intf_int->sdram_resetn   = 1;
+  wait(500);
+  //  wait(u_dut.sdr_init_done == 1);
+
+}
 
 void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
-//  afifo.push_back(Address);
-//  bfifo.push_back(bl);
-//   @ (negedge sys_clk);
+
+  driver::afifo.push(address);
+  driver::bfifo.push(burstLenght);
+  //   @ (negedge sys_clk);
   cout<<"Write Address: "<< address <<", Burst Size: "<< burstLenght <<endl;
   for(int i=0; i < burstLenght; i++){
     intf_int->wb_stb_i        = true;
@@ -99,23 +121,65 @@ void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
     intf_int->wb_sel_i        = 15; //4'b1111;
     intf_int->wb_addr_i       = (address & 0xFFFFFFFC) +i; // Address[31:2]+i;
     intf_int->wb_dat_i        =  rand() & 0xFFFFFFFF; //  $random & 32'hFFFFFFFF;
-//    dfifo.push_back(wb_dat_i);
-//    do begin
-//      @ (posedge sys_clk);
-//      end while(intf_int->wb_ack_o == false);
-//    @ (negedge sys_clk);
+    driver::dfifo.push(intf_int->wb_dat_i);
+  //    do begin
+  //      @ (posedge sys_clk);
+  //      end while(intf_int->wb_ack_o == false);
+  //    @ (negedge sys_clk);
 
     cout<<"Status: Burst-No: "<< i <<", Write Address: "<< intf_int->wb_addr_i
     <<", WriteData: "<< intf_int->wb_dat_i << endl;
   }
 
-  intf_int->wb_stb_i        = 0;
-  intf_int->wb_cyc_i        = 0;
-  intf_int->wb_we_i         = 0; //'hx;
+  intf_int->wb_stb_i        = false;
+  intf_int->wb_cyc_i        = false;
+  intf_int->wb_we_i         = false; //'hx;
   intf_int->wb_sel_i        = 0; //'hx;
   intf_int->wb_addr_i       = 0; //'hx;
   intf_int->wb_dat_i        = 0; //'hx;
 }
+
+
+/*
+task burst_read;
+reg [31:0] Address;
+reg [7:0]  bl;
+
+int i,j;
+reg [31:0]   exp_data;
+begin
+
+   Address = afifo.pop_front();
+   bl      = bfifo.pop_front();
+   @ (negedge sys_clk);
+
+      for(j=0; j < bl; j++) begin
+         wb_stb_i        = 1;
+         wb_cyc_i        = 1;
+         wb_we_i         = 0;
+         wb_addr_i       = Address[31:2]+j;
+
+         exp_data        = dfifo.pop_front(); // Exptected Read Data
+         do begin
+             @ (posedge sys_clk);
+         end while(wb_ack_o == 1'b0);
+         if(wb_dat_o !== exp_data) begin
+             $display("READ ERROR: Burst-No: %d Addr: %x Rxp: %x Exd: %x",j,wb_addr_i,wb_dat_o,exp_data);
+             ErrCnt = ErrCnt+1;
+         end else begin
+             $display("READ STATUS: Burst-No: %d Addr: %x Rxd: %x",j,wb_addr_i,wb_dat_o);
+         end
+         @ (negedge sdram_clk);
+      end
+   wb_stb_i        = 0;
+   wb_cyc_i        = 0;
+   wb_we_i         = 'hx;
+   wb_addr_i       = 'hx;
+end
+endtask
+*/
+
+
 
 /* Need to monitor the Status
   void monitor::mnt_out(){
@@ -136,11 +200,19 @@ void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
   //Test
   void base_test::test() {
     intf_int->done = 0;
-    //env->drv->reset();
-    wait(10);
+    env->mnt->errCnt = 0;
+    sc_uint<32> adr = 0x00000FF0;
+    sc_uint<8> bl = 0x04;
+
+    // Initialization
+    env->drv->initializationTopWishbone();
+
+    // TEST CASE 1
     for (int i=0; i<10; i++){
-      //env->drv->write();
+      env->drv->writeTopWishbone(adr, bl);
       wait(10);
+      adr += i;
+      bl += i;
     }
     wait(10);
     for (int i=0; i<10; i++){

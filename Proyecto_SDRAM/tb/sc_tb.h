@@ -3,6 +3,7 @@
 
 #include "systemc.h"
 #include "sc_define.c"
+#include <queue>
 
 SC_MODULE (interface) {
 
@@ -37,7 +38,6 @@ SC_MODULE (interface) {
     sc_out<bool>               wb_stb_i;
     sc_out< sc_uint<APP_AW> >  wb_addr_i;
     sc_out<bool>               wb_we_i;
-    //sc_out<sc_logic>               wb_we_i;
     sc_out< sc_uint<DW> >      wb_dat_i;
     sc_out< sc_uint<DW/8> >    wb_sel_i;
     sc_out<bool>               wb_cyc_i;
@@ -85,6 +85,10 @@ SC_MODULE (driver) {
     //scb_int = scb_ext;
   }
 
+  std::queue< sc_uint<32> > dfifo;
+  std::queue< sc_uint<32> > afifo;
+  std::queue< sc_uint<32> > bfifo;
+
   void NOP();
   void Active();
   double Read(sc_uint<8> &address);
@@ -94,6 +98,7 @@ SC_MODULE (driver) {
   void AutoRefresh();
   void LoadModeRegister();
   void writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght);
+  void initializationTopWishbone();
 };
 
 SC_MODULE (monitor) {
@@ -101,6 +106,7 @@ SC_MODULE (monitor) {
   interface *intf_int;
   //scoreboard *scb_int;
 
+  int errCnt;
   sc_uint<8> data_out_exp;
   sc_uint<8> data_out_read;
 

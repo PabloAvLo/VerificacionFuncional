@@ -57,6 +57,8 @@ SC_MODULE (interface) {
     sc_out< sc_uint<SDR_RFSH_TIMER_W> >    cfg_sdr_rfsh;
     sc_out< sc_uint<SDR_RFSH_ROW_CNT_W> >  cfg_sdr_rfmax;
 
+    int errCnt;
+
   SC_CTOR(interface) {
 
   }
@@ -99,6 +101,7 @@ SC_MODULE (driver) {
   void LoadModeRegister();
   void writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght);
   void initializationTopWishbone();
+  void readTopWishbone();
 };
 
 SC_MODULE (monitor) {
@@ -106,7 +109,6 @@ SC_MODULE (monitor) {
   interface *intf_int;
   //scoreboard *scb_int;
 
-  int errCnt;
   sc_uint<8> data_out_exp;
   sc_uint<8> data_out_read;
 

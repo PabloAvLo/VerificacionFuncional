@@ -93,6 +93,7 @@ void driver::initializationTopWishbone(){
    intf_int->wb_cyc_i       = 0;
    intf_int->wb_rst_i       = 0;
    intf_int->sdram_resetn   = 1;
+   intf_int->errCnt         = 0;
   wait(50);
 
   // Applying reset
@@ -122,10 +123,13 @@ void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
     intf_int->wb_addr_i       = (address & 0xFFFFFFFC) +i; // Address[31:2]+i;
     intf_int->wb_dat_i        =  rand() & 0xFFFFFFFF; //  $random & 32'hFFFFFFFF;
     driver::dfifo.push(intf_int->wb_dat_i);
-  //    do begin
-  //      @ (posedge sys_clk);
-  //      end while(intf_int->wb_ack_o == false);
-  //    @ (negedge sys_clk);
+
+    /*
+    do begin
+      @ (posedge sys_clk);
+      end while(intf_int->wb_ack_o == false);
+    @ (negedge sys_clk);
+    */
 
     cout<<"Status: Burst-No: "<< i <<", Write Address: "<< intf_int->wb_addr_i
     <<", WriteData: "<< intf_int->wb_dat_i << endl;
@@ -139,47 +143,45 @@ void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
   intf_int->wb_dat_i        = 0; //'hx;
 }
 
+void driver::readTopWishbone(){
 
-/*
-task burst_read;
-reg [31:0] Address;
-reg [7:0]  bl;
+  sc_uint<32> address = driver::afifo.front();
+  sc_uint<8>  burstLenght = driver::bfifo.front();
+  sc_uint<32> expectedData;
 
-int i,j;
-reg [31:0]   exp_data;
-begin
+  // @ (negedge sys_clk);
 
-   Address = afifo.pop_front();
-   bl      = bfifo.pop_front();
-   @ (negedge sys_clk);
+  for(int j=0; j < burstLenght; j++){
+    intf_int->wb_stb_i        = true;
+    intf_int->wb_cyc_i        = true;
+    intf_int->wb_we_i         = false;
+    intf_int->wb_addr_i       = (address & 0xFFFFFFFC) + j; // Address[31:2]+j;
+    expectedData    = dfifo.front(); // Exptected Read Data
 
-      for(j=0; j < bl; j++) begin
-         wb_stb_i        = 1;
-         wb_cyc_i        = 1;
-         wb_we_i         = 0;
-         wb_addr_i       = Address[31:2]+j;
+    /*
+    do begin
+      @ (posedge sys_clk);
+    end while(wb_ack_o == 1'b0);
+    */
 
-         exp_data        = dfifo.pop_front(); // Exptected Read Data
-         do begin
-             @ (posedge sys_clk);
-         end while(wb_ack_o == 1'b0);
-         if(wb_dat_o !== exp_data) begin
-             $display("READ ERROR: Burst-No: %d Addr: %x Rxp: %x Exd: %x",j,wb_addr_i,wb_dat_o,exp_data);
-             ErrCnt = ErrCnt+1;
-         end else begin
-             $display("READ STATUS: Burst-No: %d Addr: %x Rxd: %x",j,wb_addr_i,wb_dat_o);
-         end
-         @ (negedge sdram_clk);
-      end
-   wb_stb_i        = 0;
-   wb_cyc_i        = 0;
-   wb_we_i         = 'hx;
-   wb_addr_i       = 'hx;
-end
-endtask
-*/
+    if(intf_int->wb_dat_o != expectedData){
+      cout<<"READ ERROR: Burst-No: "<< j <<", Addr: "<< intf_int->wb_addr_i
+      <<" Rxp: " << intf_int->wb_dat_o <<", Exd: "<< expectedData << endl;
 
+      intf_int->errCnt += 1;
+    } else {
+      cout<<"READ STATUS: Burst-No: "<< j <<", Addr: "<< intf_int->wb_addr_i
+      <<" Rxp: " << intf_int->wb_dat_o << endl;
+    }
 
+    // @ (negedge sdram_clk);
+  }
+
+  intf_int->wb_stb_i        = false;
+  intf_int->wb_cyc_i        = false;
+  intf_int->wb_we_i         = false; //'hx;
+  intf_int->wb_addr_i       = 0; //'hx;
+}
 
 /* Need to monitor the Status
   void monitor::mnt_out(){
@@ -200,7 +202,6 @@ endtask
   //Test
   void base_test::test() {
     intf_int->done = 0;
-    env->mnt->errCnt = 0;
     sc_uint<32> adr = 0x00000FF0;
     sc_uint<8> bl = 0x04;
 
@@ -216,7 +217,7 @@ endtask
     }
     wait(10);
     for (int i=0; i<10; i++){
-      //env->drv->read();
+      env->drv->readTopWishbone();
       wait(10);
     }
     // Request for simulation termination

@@ -37,6 +37,7 @@ SC_MODULE (interface) {
     sc_out<bool>               wb_stb_i;
     sc_out< sc_uint<APP_AW> >  wb_addr_i;
     sc_out<bool>               wb_we_i;
+    //sc_out<sc_logic>               wb_we_i;
     sc_out< sc_uint<DW> >      wb_dat_i;
     sc_out< sc_uint<DW/8> >    wb_sel_i;
     sc_out<bool>               wb_cyc_i;
@@ -92,6 +93,7 @@ SC_MODULE (driver) {
   void Recharge();
   void AutoRefresh();
   void LoadModeRegister();
+  void writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght);
 };
 
 SC_MODULE (monitor) {

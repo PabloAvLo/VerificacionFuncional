@@ -85,7 +85,39 @@ void driver::LoadModeRegister(){
 }
 
 
-/* Need to monitor the Status 
+
+
+void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
+//  afifo.push_back(Address);
+//  bfifo.push_back(bl);
+//   @ (negedge sys_clk);
+  cout<<"Write Address: "<< address <<", Burst Size: "<< burstLenght <<endl;
+  for(int i=0; i < burstLenght; i++){
+    intf_int->wb_stb_i        = true;
+    intf_int->wb_cyc_i        = true;
+    intf_int->wb_we_i         = true;
+    intf_int->wb_sel_i        = 15; //4'b1111;
+    intf_int->wb_addr_i       = (address & 0xFFFFFFFC) +i; // Address[31:2]+i;
+    intf_int->wb_dat_i        =  rand() & 0xFFFFFFFF; //  $random & 32'hFFFFFFFF;
+//    dfifo.push_back(wb_dat_i);
+//    do begin
+//      @ (posedge sys_clk);
+//      end while(intf_int->wb_ack_o == false);
+//    @ (negedge sys_clk);
+
+    cout<<"Status: Burst-No: "<< i <<", Write Address: "<< intf_int->wb_addr_i
+    <<", WriteData: "<< intf_int->wb_dat_i << endl;
+  }
+
+  intf_int->wb_stb_i        = 0;
+  intf_int->wb_cyc_i        = 0;
+  intf_int->wb_we_i         = 0; //'hx;
+  intf_int->wb_sel_i        = 0; //'hx;
+  intf_int->wb_addr_i       = 0; //'hx;
+  intf_int->wb_dat_i        = 0; //'hx;
+}
+
+/* Need to monitor the Status
   void monitor::mnt_out(){
     while(true){
     wait(1);

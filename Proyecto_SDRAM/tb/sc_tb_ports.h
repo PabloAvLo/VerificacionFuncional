@@ -19,6 +19,9 @@ struct tagInput {
   unsigned long sdr_ba;
   unsigned long sdr_addr;
   unsigned long sdr_dq;
+
+  // Parameters
+  unsigned long sdr_init_done;
 };
 
 struct tagOutput {

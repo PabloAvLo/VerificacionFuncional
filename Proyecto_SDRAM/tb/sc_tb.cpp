@@ -85,28 +85,47 @@ void driver::LoadModeRegister(){
 }
 
 void driver::initializationTopWishbone(){
-   intf_int->wb_addr_i      = 0;
-   intf_int->wb_dat_i       = 0;
-   intf_int->wb_sel_i       = 0x0;
-   intf_int->wb_we_i        = false;
-   intf_int->wb_stb_i       = 0;
-   intf_int->wb_cyc_i       = 0;
-   intf_int->wb_rst_i       = 0;
-   intf_int->sdram_resetn   = 1;
-   intf_int->errCnt         = 0;
-  wait(50);
+ //Config Parameters
+  intf_int->cfg_sdr_width    = 0b10;
+  intf_int->cfg_colbits      = 0b00;
+  intf_int->cfg_req_depth    = 0x3;
+  intf_int->cfg_sdr_en       = 0b1;
+  intf_int->cfg_sdr_mode_reg = 0x033;
+  intf_int->cfg_sdr_tras_d   = 0x4;
+  intf_int->cfg_sdr_trp_d    = 0x2;
+  intf_int->cfg_sdr_trcd_d   = 0x2;
+  intf_int->cfg_sdr_cas      = 0x3;
+  intf_int->cfg_sdr_trcar_d  = 0x7;
+  intf_int->cfg_sdr_twr_d    = 0x1;
+  intf_int->cfg_sdr_rfsh     = 0x100;
+  intf_int->cfg_sdr_rfmax    = 0x6;
+
+  intf_int->wb_addr_i      = 0;
+  intf_int->wb_dat_i       = 0;
+  intf_int->wb_sel_i       = 0x0;
+  intf_int->wb_we_i        = false;
+  intf_int->wb_stb_i       = 0;
+  intf_int->wb_cyc_i       = 0;
+  intf_int->wb_rst_i       = 0;
+  intf_int->sdram_resetn   = 1;
+  intf_int->errCnt         = 0;
+  wait(10);
 
   // Applying reset
   intf_int->wb_rst_i       = 1;
   intf_int->sdram_resetn   = 0;
-  wait(5000);
+  wait(1000);
 
   // Releasing reset
   intf_int->wb_rst_i       = 0;
   intf_int->sdram_resetn   = 1;
-  wait(500);
-  //  wait(u_dut.sdr_init_done == 1);
-
+  wait(100);
+  cout<<"Waiting for SDRAM to initialize, sdr_init_done: "<<intf_int->sdr_init_done<<endl;
+  while(intf_int->sdr_init_done == 0) {
+      wait(1);
+  }
+  cout<<"SDRAM is ready! sdr_init_done: "<<intf_int->sdr_init_done<<endl;
+  wait(100);
 }
 
 void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){

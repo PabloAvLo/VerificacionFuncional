@@ -23,6 +23,8 @@ SC_MODULE (interface) {
     sc_inout< sc_uint<2> >       sdr_ba;     // SDRAM Bank Enable
     sc_inout< sc_uint<13> >      sdr_addr;   // SDRAM Address
     sc_inout< sc_uint<SDR_DW> >  sdr_dq;     // SDRA Data Output
+    // Parameters
+    sc_inout<bool>               sdr_init_done; // SDRAM initialized
 
     // Output Signals
     sc_out<bool>               done; //Terminate sim

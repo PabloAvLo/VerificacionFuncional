@@ -22,6 +22,9 @@ sc_tb    u_sc_tb("u_sc_tb");
   sc_signal< sc_uint<2> >       sdr_ba;     // SDRAM Bank Enable
   sc_signal< sc_uint<13> >      sdr_addr;   // SDRAM Address
   sc_signal< sc_uint<SDR_DW> >  sdr_dq;     // SDRA Data Output
+  // Parameters
+  // Indicate SDRAM initialization is done
+  sc_signal<bool>               sdr_init_done;
 
   // Output Signals
   sc_signal<bool>               done; //Terminate sim
@@ -76,6 +79,8 @@ void init_sc() {
   u_sc_tb.intf->sdr_ba(sdr_ba);
   u_sc_tb.intf->sdr_addr(sdr_addr);
   u_sc_tb.intf->sdr_dq(sdr_dq);
+  // Parameters
+  u_sc_tb.intf->sdr_init_done(sdr_init_done);
 
   //Output Signals
   u_sc_tb.intf->done(done);
@@ -128,6 +133,8 @@ void sample_hdl(void *Invector) {
   sdr_ba.write(pInvector->sdr_ba);
   sdr_addr.write(pInvector->sdr_addr);
   sdr_dq.write(pInvector->sdr_dq);
+  // Parameters
+  sdr_init_done.write(pInvector->sdr_init_done);
 }
 
 void drive_hdl(void *Outvector) {

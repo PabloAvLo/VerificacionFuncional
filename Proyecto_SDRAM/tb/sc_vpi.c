@@ -26,7 +26,7 @@ int sc_tb_calltf(char *user_data) {
   cb_data_s.value     = &value_s;
 
   //Callback signal
-  wb_clk_i = vpi_handle_by_name("tb.sys_clk", NULL);
+  wb_clk_i = vpi_handle_by_name("tb.wb_clk_i", NULL);
   cb_data_s.obj  = wb_clk_i;
   vpi_register_cb(&cb_data_s);
 
@@ -48,7 +48,7 @@ int sc_tb_interface(p_cb_data cb_data)
 
   // Input Signals
   // WB bus
-  vpiHandle wb_clk_i          = vpi_handle_by_name("tb.sys_clk", NULL);
+  vpiHandle wb_clk_i          = vpi_handle_by_name("tb.wb_clk_i", NULL);
   vpiHandle wb_ack_o          = vpi_handle_by_name("tb.wb_ack_o", NULL);
   vpiHandle wb_dat_o          = vpi_handle_by_name("tb.wb_dat_o", NULL);
   // Interface to SDRAM
@@ -62,6 +62,8 @@ int sc_tb_interface(p_cb_data cb_data)
   vpiHandle sdr_ba            = vpi_handle_by_name("tb.sdr_ba", NULL);
   vpiHandle sdr_addr          = vpi_handle_by_name("tb.sdr_addr", NULL);
   vpiHandle sdr_dq            = vpi_handle_by_name("tb.sdr_dq", NULL);
+  // Parameters
+  vpiHandle sdr_init_done     = vpi_handle_by_name("tb.sdr_init_done", NULL);
 
   // Output Signals
   vpiHandle cfg_sdr_width     = vpi_handle_by_name("tb.cfg_sdr_width", NULL);
@@ -131,6 +133,9 @@ int sc_tb_interface(p_cb_data cb_data)
 
   vpi_get_value(sdr_dq, &value_s);
   invector.sdr_dq = value_s.value.integer;
+
+  vpi_get_value(sdr_init_done, &value_s);
+  invector.sdr_init_done = value_s.value.integer;
 
   sc_time sc_time_tmp (1, SC_NS);
   exec_sc(&invector, &outvector, sc_time_tmp);

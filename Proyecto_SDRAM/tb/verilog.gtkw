@@ -1,0 +1,87 @@
+[*]
+[*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
+[*] Sun Jun 10 20:49:09 2018
+[*]
+[dumpfile] "/home/hgvalver/Documentos/Verificacion/Proyectos/VerificacionFuncional/Proyecto_SDRAM/tb/verilog.vcd"
+[dumpfile_mtime] "Sun Jun 10 20:46:22 2018"
+[dumpfile_size] 117448
+[savefile] "/home/hgvalver/Documentos/Verificacion/Proyectos/VerificacionFuncional/Proyecto_SDRAM/tb/verilog.gtkw"
+[timestart] 0
+[size] 1317 744
+[pos] -1 -1
+*-11.908166 20 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb.
+[treeopen] tb.dut.
+[sst_width] 225
+[signals_width] 206
+[sst_expanded] 1
+[sst_vpaned_height] 211
+@200
+-WB Bus
+@28
+tb.dut.wb_clk_i
+tb.dut.wb_ack_o
+@22
+tb.dut.wb_dat_o[31:0]
+@200
+-
+@28
+tb.dut.wb_rst_i
+tb.dut.wb_stb_i
+@22
+tb.dut.wb_addr_i[25:0]
+@28
+tb.dut.wb_we_i
+@22
+tb.dut.wb_dat_i[31:0]
+tb.dut.wb_sel_i[3:0]
+@28
+tb.dut.wb_cyc_i
+tb.dut.wb_cti_i[2:0]
+@200
+-
+-SDRAM interface
+@28
+tb.dut.sdram_clk
+tb.dut.sdr_cs_n
+tb.dut.sdr_cke
+tb.dut.sdr_ras_n
+tb.dut.sdr_cas_n
+tb.dut.sdr_we_n
+tb.dut.sdr_dqm
+tb.dut.sdr_ba[1:0]
+@22
+tb.dut.sdr_addr[12:0]
+tb.dut.sdr_dq[7:0]
+@200
+-
+@28
+tb.dut.sdram_resetn
+@200
+-
+-Config
+@28
+tb.dut.cfg_sdr_width[1:0]
+tb.dut.cfg_colbits[1:0]
+@200
+-
+@29
+tb.dut.sdr_init_done
+@28
+tb.dut.cfg_req_depth[1:0]
+tb.dut.cfg_sdr_en
+@22
+tb.dut.cfg_sdr_mode_reg[12:0]
+tb.dut.cfg_sdr_tras_d[3:0]
+tb.dut.cfg_sdr_trp_d[3:0]
+tb.dut.cfg_sdr_trcd_d[3:0]
+@28
+tb.dut.cfg_sdr_cas[2:0]
+@22
+tb.dut.cfg_sdr_trcar_d[3:0]
+tb.dut.cfg_sdr_twr_d[3:0]
+tb.dut.cfg_sdr_rfsh[11:0]
+@28
+tb.dut.cfg_sdr_rfmax[2:0]
+[pattern_trace] 1
+[pattern_trace] 0

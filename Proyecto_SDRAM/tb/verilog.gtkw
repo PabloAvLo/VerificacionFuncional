@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
-[*] Sun Jun 10 20:49:09 2018
+[*] Mon Jun 11 00:10:56 2018
 [*]
 [dumpfile] "/home/hgvalver/Documentos/Verificacion/Proyectos/VerificacionFuncional/Proyecto_SDRAM/tb/verilog.vcd"
-[dumpfile_mtime] "Sun Jun 10 20:46:22 2018"
-[dumpfile_size] 117448
+[dumpfile_mtime] "Mon Jun 11 00:09:46 2018"
+[dumpfile_size] 149948
 [savefile] "/home/hgvalver/Documentos/Verificacion/Proyectos/VerificacionFuncional/Proyecto_SDRAM/tb/verilog.gtkw"
-[timestart] 0
+[timestart] 13062
 [size] 1317 744
 [pos] -1 -1
-*-11.908166 20 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-9.486266 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb.
 [treeopen] tb.dut.
 [sst_width] 225
@@ -28,12 +28,13 @@ tb.dut.wb_dat_o[31:0]
 @28
 tb.dut.wb_rst_i
 tb.dut.wb_stb_i
-@22
+@24
 tb.dut.wb_addr_i[25:0]
 @28
 tb.dut.wb_we_i
-@22
+@25
 tb.dut.wb_dat_i[31:0]
+@22
 tb.dut.wb_sel_i[3:0]
 @28
 tb.dut.wb_cyc_i
@@ -52,6 +53,7 @@ tb.dut.sdr_dqm
 tb.dut.sdr_ba[1:0]
 @22
 tb.dut.sdr_addr[12:0]
+@24
 tb.dut.sdr_dq[7:0]
 @200
 -
@@ -65,9 +67,8 @@ tb.dut.cfg_sdr_width[1:0]
 tb.dut.cfg_colbits[1:0]
 @200
 -
-@29
-tb.dut.sdr_init_done
 @28
+tb.dut.sdr_init_done
 tb.dut.cfg_req_depth[1:0]
 tb.dut.cfg_sdr_en
 @22

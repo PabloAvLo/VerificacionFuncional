@@ -138,17 +138,15 @@ void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
     intf_int->wb_stb_i        = true;
     intf_int->wb_cyc_i        = true;
     intf_int->wb_we_i         = true;
-    intf_int->wb_sel_i        = 15; //4'b1111;
-    intf_int->wb_addr_i       = (address & 0xFFFFFFFC) +i; // Address[31:2]+i;
-    intf_int->wb_dat_i        =  rand() & 0xFFFFFFFF; //  $random & 32'hFFFFFFFF;
-    driver::dfifo.push(intf_int->wb_dat_i);
+    intf_int->wb_sel_i        = 0b1111;
+    intf_int->wb_addr_i       = (address >> 2) + i; // Address[31:2]+i;
+    intf_int->wb_dat_i        = rand() & 0xFF; //  $random & 32'hFFFFFFFF;
 
-    /*
-    do begin
-      @ (posedge sys_clk);
-      end while(intf_int->wb_ack_o == false);
-    @ (negedge sys_clk);
-    */
+    wait(2);
+    while(intf_int->wb_ack_o == false) {
+        wait(1);
+    }
+    driver::dfifo.push(intf_int->wb_dat_i);
 
     cout<<"Status: Burst-No: "<< i <<", Write Address: "<< intf_int->wb_addr_i
     <<", WriteData: "<< intf_int->wb_dat_i << endl;
@@ -165,23 +163,31 @@ void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
 void driver::readTopWishbone(){
 
   sc_uint<32> address = driver::afifo.front();
+  driver::afifo.pop();
   sc_uint<8>  burstLenght = driver::bfifo.front();
+  driver::bfifo.pop();
   sc_uint<32> expectedData;
 
+  wait(1);
   // @ (negedge sys_clk);
 
   for(int j=0; j < burstLenght; j++){
     intf_int->wb_stb_i        = true;
     intf_int->wb_cyc_i        = true;
     intf_int->wb_we_i         = false;
-    intf_int->wb_addr_i       = (address & 0xFFFFFFFC) + j; // Address[31:2]+j;
-    expectedData    = dfifo.front(); // Exptected Read Data
+    intf_int->wb_addr_i       = (address >> 2) + j; // Address[31:2]+j;
+    expectedData    = driver::dfifo.front(); // Exptected Read Data
+    driver::dfifo.pop();
 
     /*
     do begin
       @ (posedge sys_clk);
     end while(wb_ack_o == 1'b0);
     */
+    wait(2);
+    while(intf_int->wb_ack_o == 0b0) {
+        wait(1);
+    }
 
     if(intf_int->wb_dat_o != expectedData){
       cout<<"READ ERROR: Burst-No: "<< j <<", Addr: "<< intf_int->wb_addr_i
@@ -228,17 +234,17 @@ void driver::readTopWishbone(){
     env->drv->initializationTopWishbone();
 
     // TEST CASE 1
-    for (int i=0; i<10; i++){
+    //for (int i=4; i<=4; i+=4){
       env->drv->writeTopWishbone(adr, bl);
-      wait(10);
-      adr += i;
-      bl += i;
-    }
-    wait(10);
-    for (int i=0; i<10; i++){
+      wait(100);
+      //adr += i;
+      //bl += i;
+    //}
+    //wait(10);
+    //for (int i=0; i<1; i++){
       env->drv->readTopWishbone();
       wait(10);
-    }
+    //}
     // Request for simulation termination
     cout << "=======================================" << endl;
     cout << " SIMULATION END" << endl;

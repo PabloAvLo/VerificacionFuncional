@@ -93,16 +93,8 @@ SC_MODULE (driver) {
   std::queue< sc_uint<32> > afifo;
   std::queue< sc_uint<32> > bfifo;
 
-  void NOP();
-  void Active();
-  double Read(sc_uint<8> &address);
-  void Write(sc_uint<8> &address);
-  void BurstTerminate();
-  void Recharge();
-  void AutoRefresh();
-  void LoadModeRegister();
   void writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght);
-  void initializationTopWishbone();
+  void SetUpTopWishbone();
   void readTopWishbone();
 };
 

@@ -46,6 +46,7 @@ SC_MODULE (interface) {
     sc_out< sc_uint<3> >       wb_cti_i;
     // Interface to SDRAM
     sc_out<bool>               sdram_resetn;
+    //sc_out< sc_uint<4> >       sdram_wr_en_n;
     // Parameters
     sc_out< sc_uint<2> >       cfg_req_depth;  // Maximum Request accepted by SDRAM controller
     sc_out<bool>               cfg_sdr_en;   // Enable SDRAM controller

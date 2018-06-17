@@ -24,6 +24,7 @@ void driver::SetUpTopWishbone(){
   intf_int->wb_cyc_i       = 0;
   intf_int->wb_rst_i       = 0;
   intf_int->sdram_resetn   = 1;
+  //intf_int->sdram_wr_en_n  = 0xf;
   intf_int->errCnt         = 0;
   wait(10);
 
@@ -48,7 +49,10 @@ void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
 
   driver::afifo.push(address);
   driver::bfifo.push(burstLenght);
+
+  //intf_int->sdram_wr_en_n     = 0x0; // Enable write mode
   //   @ (negedge sys_clk);
+  wait(5, SC_NS);
   cout<<"Write Address: "<< address <<", Burst Size: "<< burstLenght <<endl;
   for(int i=0; i < burstLenght; i++){
     intf_int->wb_stb_i        = true;
@@ -58,9 +62,13 @@ void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
     intf_int->wb_addr_i       = (address >> 2) + i; // Address[31:2]+i;
     intf_int->wb_dat_i        = rand() & 0xFF; //  $random & 32'hFFFFFFFF;
 
-    wait(2);
-    while(intf_int->wb_ack_o == false) {
-        wait(1);
+    wait(1);
+    while(true) {
+        wait(5, SC_NS);
+        if (intf_int->wb_ack_o == true) {
+            break;
+        }
+        wait(5, SC_NS);
     }
     driver::dfifo.push(intf_int->wb_dat_i);
 
@@ -72,8 +80,9 @@ void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
   intf_int->wb_cyc_i        = false;
   intf_int->wb_we_i         = false; //'hx;
   intf_int->wb_sel_i        = 0; //'hx;
-  intf_int->wb_addr_i       = 0; //'hx;
-  intf_int->wb_dat_i        = 0; //'hx;
+  intf_int->wb_addr_i       = 0x3FFFFFFF; //'hx;
+  intf_int->wb_dat_i        = 0xFF; //'hx;
+  //intf_int->sdram_wr_en_n   = 0xf;  // Disable write mode
 }
 
 void driver::readTopWishbone(){
@@ -84,10 +93,11 @@ void driver::readTopWishbone(){
   driver::bfifo.pop();
   sc_uint<32> expectedData;
 
-  wait(1);
+  //wait(1);
   // @ (negedge sys_clk);
+  wait(5, SC_NS);
 
-  for(int j=0; j < burstLenght; j++){
+  for(int j=0; j < burstLenght; j++) {
     intf_int->wb_stb_i        = true;
     intf_int->wb_cyc_i        = true;
     intf_int->wb_we_i         = false;
@@ -100,12 +110,12 @@ void driver::readTopWishbone(){
       @ (posedge sys_clk);
     end while(wb_ack_o == 1'b0);
     */
-    wait(2);
+    wait(1);
     while(intf_int->wb_ack_o == 0b0) {
-        wait(1);
+        wait(1, SC_NS);
     }
 
-    if(intf_int->wb_dat_o != expectedData){
+    if(intf_int->wb_dat_o != expectedData) {
       cout<<"READ ERROR: Burst-No: "<< j <<", Addr: "<< intf_int->wb_addr_i
       <<" Rxp: " << intf_int->wb_dat_o <<", Exd: "<< expectedData << endl;
 
@@ -116,12 +126,13 @@ void driver::readTopWishbone(){
     }
 
     // @ (negedge sdram_clk);
+    wait(5, SC_NS);
   }
 
   intf_int->wb_stb_i        = false;
   intf_int->wb_cyc_i        = false;
-  intf_int->wb_we_i         = false; //'hx;
-  intf_int->wb_addr_i       = 0; //'hx;
+  intf_int->wb_we_i         = true; //'hx;
+  intf_int->wb_addr_i       = 0x3FFFFFFF; //'hx;
 }
 
 /* Need to monitor the Status

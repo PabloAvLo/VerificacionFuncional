@@ -43,6 +43,7 @@ struct tagOutput {
 
   // Interface to SDRAM
   unsigned long sdram_resetn;
+  //unsigned long sdram_wr_en_n;
 
   // Parameters
   unsigned long cfg_req_depth;

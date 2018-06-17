@@ -46,6 +46,7 @@ sc_tb    u_sc_tb("u_sc_tb");
   sc_signal< sc_uint<3> >       wb_cti_i;
   // Interface to SDRAM
   sc_signal<bool>               sdram_resetn;
+  //sc_signal< sc_uint<4> >       sdram_wr_en_n;
   // Parameters
   sc_signal< sc_uint<2> >       cfg_req_depth;  // Maximum Request accepted by SDRAM controller
   sc_signal<bool>               cfg_sdr_en;   // Enable SDRAM controller
@@ -98,6 +99,7 @@ void init_sc() {
   u_sc_tb.intf->wb_cti_i(wb_cti_i);
   // Interface to SDRAM
   u_sc_tb.intf->sdram_resetn(sdram_resetn);
+  //u_sc_tb.intf->sdram_wr_en_n(sdram_wr_en_n);
   // Parameters
   u_sc_tb.intf->cfg_req_depth(cfg_req_depth);
   u_sc_tb.intf->cfg_sdr_en(cfg_sdr_en);
@@ -154,6 +156,7 @@ void drive_hdl(void *Outvector) {
   pOutvector->wb_cti_i          = wb_cti_i.read();
   // Interface to SDRAM
   pOutvector->sdram_resetn      = sdram_resetn.read();
+  //pOutvector->sdram_wr_en_n     = sdram_wr_en_n.read();
   // Parameters
   pOutvector->cfg_req_depth     = cfg_req_depth.read();
   pOutvector->cfg_sdr_en        = cfg_sdr_en.read();

@@ -79,6 +79,7 @@ int sc_tb_interface(p_cb_data cb_data)
   vpiHandle wb_cti_i          = vpi_handle_by_name("tb.wb_cti_i", NULL);
   // Interface to SDRAM
   vpiHandle sdram_resetn      = vpi_handle_by_name("tb.sdram_resetn", NULL);
+  //vpiHandle sdram_wr_en_n     = vpi_handle_by_name("tb.sdram_wr_en_n", NULL);
   // Parameters
   vpiHandle cfg_req_depth     = vpi_handle_by_name("tb.cfg_req_depth", NULL);
   vpiHandle cfg_sdr_en        = vpi_handle_by_name("tb.cfg_sdr_en", NULL);
@@ -172,6 +173,9 @@ int sc_tb_interface(p_cb_data cb_data)
 
   value_s.value.integer = outvector.sdram_resetn;
   vpi_put_value(sdram_resetn, &value_s, 0, vpiNoDelay);
+
+  //value_s.value.integer = outvector.sdram_wr_en_n;
+  //vpi_put_value(sdram_wr_en_n, &value_s, 0, vpiNoDelay);
 
   value_s.value.integer = outvector.cfg_req_depth;
   vpi_put_value(cfg_req_depth, &value_s, 0, vpiNoDelay);

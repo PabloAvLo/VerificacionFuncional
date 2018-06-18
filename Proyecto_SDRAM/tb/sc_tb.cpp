@@ -51,7 +51,7 @@ void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
   driver::bfifo.push(burstLenght);
 
   //intf_int->sdram_wr_en_n     = 0x0; // Enable write mode
-  //   @ (negedge sys_clk);
+
   wait(5, SC_NS);
   cout<<"Write Address: "<< address <<", Burst Size: "<< burstLenght <<endl;
   for(int i=0; i < burstLenght; i++){
@@ -94,7 +94,7 @@ void driver::readTopWishbone(){
   sc_uint<32> expectedData;
 
   //wait(1);
-  // @ (negedge sys_clk);
+  
   wait(5, SC_NS);
 
   for(int j=0; j < burstLenght; j++) {
@@ -105,11 +105,6 @@ void driver::readTopWishbone(){
     expectedData    = driver::dfifo.front(); // Exptected Read Data
     driver::dfifo.pop();
 
-    /*
-    do begin
-      @ (posedge sys_clk);
-    end while(wb_ack_o == 1'b0);
-    */
     wait(1);
     while(intf_int->wb_ack_o == 0b0) {
         wait(1, SC_NS);
@@ -125,7 +120,6 @@ void driver::readTopWishbone(){
       <<" Rxp: " << intf_int->wb_dat_o << endl;
     }
 
-    // @ (negedge sdram_clk);
     wait(5, SC_NS);
   }
 

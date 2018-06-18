@@ -2,6 +2,7 @@
 #define SC_TB_TEST_H
 
 #include "systemc.h"
+#include "scv.h"
 #include "sc_define.c"
 #include <queue>
 
@@ -62,84 +63,128 @@ SC_MODULE (interface) {
 
     int errCnt;
 
-  SC_CTOR(interface) {
-
-  }
-
+// Constructor
+  SC_CTOR(interface){}
 };
 
-/*SC_MODULE (scoreboard) {
 
-  sc_fifo<sc_uint<8> > fifo;
+// ************************** SCOREBOARD
+SC_MODULE (scoreboard) {
+
+  sc_fifo<sc_uint<32> > addr_fifo;
+  sc_fifo<sc_uint<8> > buLen_fifo;
+  sc_fifo<sc_uint<32> > data_fifo;
+  int n_cases;
 
   SC_CTOR(scoreboard) {
-    sc_fifo<sc_uint<8> > fifo (100); //FIXME this should be dynamic allocation.
+    sc_fifo<sc_uint<32> > addr_fifo (100); //n_cases);
+    sc_fifo<sc_uint<8> > buLen_fifo (100); //n_cases);
+    sc_fifo<sc_uint<32> > data_fifo (100); //n_cases);
   }
-};*/
+};
 
+
+// ************************** DRIVER
 SC_MODULE (driver) {
 
   interface *intf_int;
-  //scoreboard *scb_int;
+  scoreboard *scb_int;
 
   SC_HAS_PROCESS(driver);
-  driver(sc_module_name driver, /*scoreboard *scb_ext, */interface *intf_ext) {
+  driver(sc_module_name driver, scoreboard *scb_ext, interface *intf_ext) {
     //Interface
     intf_int = intf_ext;
     //Scoreboard
-    //scb_int = scb_ext;
+    scb_int = scb_ext;
   }
 
-  std::queue< sc_uint<32> > dfifo;
-  std::queue< sc_uint<32> > afifo;
-  std::queue< sc_uint<32> > bfifo;
-
-  void writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght);
   void SetUpTopWishbone();
-  void readTopWishbone();
+  void writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght);
+  void readTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght);
 };
 
+// ************************** CONSTRAINS
+class data_rnd_constraint : public scv_constraint_base {
+public:
+  scv_smart_ptr< sc_uint<8> > data;
+
+  SCV_CONSTRAINT_CTOR(data_rnd_constraint) {
+    // Soft Constraint
+    SCV_SOFT_CONSTRAINT ( data() < 20 ); // Max
+    SCV_SOFT_CONSTRAINT ( data() > 0 );   // Min
+    // Hard Constraint
+    SCV_CONSTRAINT ( data() > 10 );
+  }
+};
+
+// ************************** SIGNAL GENERATOR
+SC_MODULE (signal_generator) {
+
+  interface *intf_int;
+
+  SC_HAS_PROCESS(signal_generator);
+  signal_generator(sc_module_name signal_generator, interface *intf_ext) {
+
+    //Interface
+    intf_int = intf_ext;
+  }
+
+  sc_uint<8 > data_rnd_gen(){
+  scv_random::set_global_seed(scv_random::pick_random_seed()); //FIXME: needs to come from test seed
+  data_rnd_constraint data_rnd ("data_rnd_constraint");
+  data_rnd.next();
+  return data_rnd.data.read();
+  }
+};
+
+// ************************** MONITOR
 SC_MODULE (monitor) {
 
   interface *intf_int;
-  //scoreboard *scb_int;
+  scoreboard *scb_int;
 
   sc_uint<8> data_out_exp;
   sc_uint<8> data_out_read;
 
   SC_HAS_PROCESS(monitor);
-  monitor(sc_module_name monitor, /*scoreboard *scb_ext, */interface *intf_ext) {
+  monitor(sc_module_name monitor, scoreboard *scb_ext, interface *intf_ext) {
     //Interface
     intf_int=intf_ext;
     //Scoreboard
-    //scb_int = scb_ext;
-    //SC_THREAD(mnt_out);
-      //sensitive << intf_int->rd_en.pos();
+    scb_int = scb_ext;
+    SC_THREAD(mnt_out);
+    //sensitive << intf_int->rd_en.pos();
   }
 
   void mnt_out();
 
 };
 
+
+// ************************** ENVIROMENT
 SC_MODULE (environment) {
 
   driver *drv;
   monitor *mnt;
-  //scoreboard *scb;
+  scoreboard *scb;
+  signal_generator *sig_gen;
 
   SC_HAS_PROCESS(environment);
   environment(sc_module_name environment, interface *intf_ext) {
 
     //Scoreboard
-    //scb = new scoreboard("scb");
+    scb = new scoreboard("scb");
     //Driver
-    drv = new driver("drv",/*scb,*/intf_ext);
+    drv = new driver("drv",scb,intf_ext);
     //Monitor
-    mnt = new monitor("mnt",/*scb,*/intf_ext);
+    mnt = new monitor("mnt",scb,intf_ext);
+    // Signal Generator
+    sig_gen = new signal_generator("sig_gen",intf_ext);
 
   }
 };
 
+// ************************** BASE TEST
 SC_MODULE (base_test) {
 
   interface *intf_int;
@@ -157,6 +202,7 @@ SC_MODULE (base_test) {
   }
 };
 
+// ************************** SYSTEM C TEST BENCH
 SC_MODULE (sc_tb) {
 
   base_test *test1;

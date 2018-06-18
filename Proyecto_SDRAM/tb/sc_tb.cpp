@@ -1,5 +1,6 @@
 #include "sc_tb.h"
 
+// ************************** DRIVER SETUP
 void driver::SetUpTopWishbone(){
  //Config Parameters
   intf_int->cfg_sdr_width    = 0b10;
@@ -45,10 +46,11 @@ void driver::SetUpTopWishbone(){
   wait(100);
 }
 
+// ************************** DRIVER WRITE
 void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
 
-  driver::afifo.push(address);
-  driver::bfifo.push(burstLenght);
+  scb_int->addr_fifo.write(address);
+  scb_int->buLen_fifo.write(burstLenght);
 
   //intf_int->sdram_wr_en_n     = 0x0; // Enable write mode
 
@@ -70,12 +72,11 @@ void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
         }
         wait(5, SC_NS);
     }
-    driver::dfifo.push(intf_int->wb_dat_i);
+    scb_int->data_fifo.write(intf_int->wb_dat_i);
 
     cout<<"Status: Burst-No: "<< i <<", Write Address: "<< intf_int->wb_addr_i
     <<", WriteData: "<< intf_int->wb_dat_i << endl;
   }
-
   intf_int->wb_stb_i        = false;
   intf_int->wb_cyc_i        = false;
   intf_int->wb_we_i         = false; //'hx;
@@ -85,16 +86,9 @@ void driver::writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
   //intf_int->sdram_wr_en_n   = 0xf;  // Disable write mode
 }
 
-void driver::readTopWishbone(){
+// ************************** DRIVER READ
+void driver::readTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
 
-  sc_uint<32> address = driver::afifo.front();
-  driver::afifo.pop();
-  sc_uint<8>  burstLenght = driver::bfifo.front();
-  driver::bfifo.pop();
-  sc_uint<32> expectedData;
-
-  //wait(1);
-  
   wait(5, SC_NS);
 
   for(int j=0; j < burstLenght; j++) {
@@ -102,24 +96,13 @@ void driver::readTopWishbone(){
     intf_int->wb_cyc_i        = true;
     intf_int->wb_we_i         = false;
     intf_int->wb_addr_i       = (address >> 2) + j; // Address[31:2]+j;
-    expectedData    = driver::dfifo.front(); // Exptected Read Data
-    driver::dfifo.pop();
 
     wait(1);
     while(intf_int->wb_ack_o == 0b0) {
         wait(1, SC_NS);
     }
 
-    if(intf_int->wb_dat_o != expectedData) {
-      cout<<"READ ERROR: Burst-No: "<< j <<", Addr: "<< intf_int->wb_addr_i
-      <<" Rxp: " << intf_int->wb_dat_o <<", Exd: "<< expectedData << endl;
-
-      intf_int->errCnt += 1;
-    } else {
-      cout<<"READ STATUS: Burst-No: "<< j <<", Addr: "<< intf_int->wb_addr_i
-      <<" Rxp: " << intf_int->wb_dat_o << endl;
-    }
-
+    cout<<"@"<<sc_time_stamp()<<" SDRAM data read:" << intf_int->wb_dat_o << endl;
     wait(5, SC_NS);
   }
 
@@ -129,41 +112,69 @@ void driver::readTopWishbone(){
   intf_int->wb_addr_i       = 0x3FFFFFFF; //'hx;
 }
 
-/* Need to monitor the Status
+// ************************** MONITOR / CHECKER (READ)
   void monitor::mnt_out(){
+
     while(true){
     wait(1);
-    data_out_exp = scb_int->fifo.read();
-    data_out_read = intf_int->sdr_data_out;
-    cout<<"@"<<sc_time_stamp()<<" Monitor data_out:" << data_out_exp << endl;
-    cout<<"@"<<sc_time_stamp()<<" Scoreboard data_out:" << data_out_read << endl;
-    //Checker
-    if (data_out_exp != data_out_read)
-      //assert(data_out_exp == data_out_read);
-      cout<<"@"<<sc_time_stamp()<<" ERROR: data read and expected mismatch!" << endl;
-    }
-}
-*/
+    sc_uint<32> address = scb_int->addr_fifo.read();
+    sc_uint<8>  burstLenght = scb_int->buLen_fifo.read();
+    sc_uint<32> expectedData;
 
-  //Test
+    wait(5, SC_NS);
+
+    for(int j=0; j < burstLenght; j++) {
+      intf_int->wb_stb_i        = true;
+      intf_int->wb_cyc_i        = true;
+      intf_int->wb_we_i         = false;
+      intf_int->wb_addr_i       = (address >> 2) + j; // Address[31:2]+j;
+      expectedData              = scb_int->data_fifo.read(); // Exptected Read Data
+
+      wait(1);
+      while(intf_int->wb_ack_o == 0b0) {
+          wait(1, SC_NS);
+      }
+
+      // --------------------------  Monitor
+      cout<<"@"<<sc_time_stamp()<<" Monitor data_out:" << intf_int->wb_dat_o << endl;
+      cout<<"@"<<sc_time_stamp()<<" Scoreboard data_out:" << expectedData << endl;
+
+      // -------------------------- Checker
+      if(intf_int->wb_dat_o != expectedData) {
+        cout<<"READ ERROR: Burst-No: "<< j <<", Addr: "<< intf_int->wb_addr_i
+        <<" Rxp: " << intf_int->wb_dat_o <<", Exd: "<< expectedData << endl;
+
+        intf_int->errCnt += 1;
+      } else {
+        cout<<"READ STATUS: Burst-No: "<< j <<", Addr: "<< intf_int->wb_addr_i
+        <<" Rxp: " << intf_int->wb_dat_o << endl;
+      }
+
+      wait(5, SC_NS);
+    }
+    intf_int->wb_stb_i        = false;
+    intf_int->wb_cyc_i        = false;
+    intf_int->wb_we_i         = true; //'hx;
+    intf_int->wb_addr_i       = 0x3FFFFFFF; //'hx
+  }
+}
+
+
+// ************************** TEST
   void base_test::test() {
     intf_int->done = 0;
     sc_uint<32> adr = 0x00000FF0;
     sc_uint<8> bl = 0x04;
 
     // Initialization
+    env->scb->n_cases = 5; // Indicates the maximum number of read/writes the test will do.
     env->drv->SetUpTopWishbone();
 
     // TEST CASE 1
-    //for (int i=4; i<=4; i+=4){
       env->drv->writeTopWishbone(adr, bl);
       wait(100);
-      //adr += i;
-      //bl += i;
-    //}
-    //wait(10);
-    //for (int i=0; i<1; i++){
-      env->drv->readTopWishbone();
+
+      env->drv->readTopWishbone(adr, bl);
       wait(10);
     //}
     // Request for simulation termination

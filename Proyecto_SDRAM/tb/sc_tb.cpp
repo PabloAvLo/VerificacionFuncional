@@ -2,7 +2,7 @@
 
 // ************************** DRIVER SETUP
 void driver::SetUpTopWishbone(){
- //Config Parameters
+ // Config Parameters
   intf_int->cfg_sdr_width    = 0b10;
   intf_int->cfg_colbits      = 0b00;
   intf_int->cfg_req_depth    = 0x3;
@@ -16,6 +16,7 @@ void driver::SetUpTopWishbone(){
   intf_int->cfg_sdr_twr_d    = 0x1;
   intf_int->cfg_sdr_rfsh     = 0x100;
   intf_int->cfg_sdr_rfmax    = 0x6;
+  wait(1);
 
   intf_int->wb_addr_i      = 0;
   intf_int->wb_dat_i       = 0;

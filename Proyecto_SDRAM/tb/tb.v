@@ -20,6 +20,7 @@ reg [2:0]         wb_cti_i;
 // Interface to SDRAM
 reg               sdram_resetn;
 reg               sdram_clk;
+//reg [3:0]         sdram_wr_en_n;
 // Parameters
 reg [1:0]         cfg_req_depth;
 reg               cfg_sdr_en;
@@ -62,55 +63,56 @@ initial begin
 end
 
 // Clock generator
-always #(`P_SYS/2) wb_clk_i   = ~wb_clk_i;
+always #(`P_SYS/2) wb_clk_i  = ~wb_clk_i;
 always #(`P_SDR/2) sdram_clk = ~sdram_clk;
 
 // DUT connection
 sdrc_top #(.SDR_DW(`SDR_DW),.SDR_BW(`SDR_BW),.dw(`dw),.APP_AW(`APP_AW))
   dut (
 
-    cfg_sdr_width       ,
-    cfg_colbits         ,
+    .cfg_sdr_width( cfg_sdr_width    )  ,
+    .cfg_colbits(   cfg_colbits      )  ,
 
     // WB bus
-    wb_rst_i            ,
-    wb_clk_i            ,
-    wb_stb_i            ,
-    wb_ack_o            ,
-    wb_addr_i           ,
-    wb_we_i             ,
-    wb_dat_i            ,
-    wb_sel_i            ,
-    wb_dat_o            ,
-    wb_cyc_i            ,
-    wb_cti_i            ,
+    .wb_rst_i(      wb_rst_i         )  ,
+    .wb_clk_i(      wb_clk_i         )  ,
+    .wb_stb_i(      wb_stb_i         )  ,
+    .wb_ack_o(      wb_ack_o         )  ,
+    .wb_addr_i(     wb_addr_i        )  ,
+    .wb_we_i(       wb_we_i          )  ,
+    .wb_dat_i(      wb_dat_i         )  ,
+    .wb_sel_i(      wb_sel_i         )  ,
+    .wb_dat_o(      wb_dat_o         )  ,
+    .wb_cyc_i(      wb_cyc_i         )  ,
+    .wb_cti_i(      wb_cti_i         )  ,
 
 		/* Interface to SDRAMs */
-    sdram_clk           ,
-    sdram_resetn        ,
-    sdr_cs_n            ,
-    sdr_cke             ,
-    sdr_ras_n           ,
-    sdr_cas_n           ,
-    sdr_we_n            ,
-    sdr_dqm             ,
-    sdr_ba              ,
-    sdr_addr            ,
-    sdr_dq              ,
+    .sdram_clk(     sdram_clk        )  ,
+    .sdram_resetn(  sdram_resetn     )  ,
+    //sdram_wr_en_n    )  ,
+    .sdr_cs_n(      sdr_cs_n         )  ,
+    .sdr_cke(       sdr_cke          )  ,
+    .sdr_ras_n(     sdr_ras_n        )  ,
+    .sdr_cas_n(     sdr_cas_n        )  ,
+    .sdr_we_n(      sdr_we_n         )  ,
+    .sdr_dqm(       sdr_dqm          )  ,
+    .sdr_ba(        sdr_ba           )  ,
+    .sdr_addr(      sdr_addr         )  ,
+    .sdr_dq(        sdr_dq           )  ,
 
+    .sdr_init_done( sdr_init_done    )  ,
 		/* Parameters */
-    sdr_init_done       ,
-    cfg_req_depth       ,   //how many req. buffer should hold
-    cfg_sdr_en          ,
-    cfg_sdr_mode_reg    ,
-    cfg_sdr_tras_d      ,
-    cfg_sdr_trp_d       ,
-    cfg_sdr_trcd_d      ,
-    cfg_sdr_cas         ,
-    cfg_sdr_trcar_d     ,
-    cfg_sdr_twr_d       ,
-    cfg_sdr_rfsh        ,
-	  cfg_sdr_rfmax
+    .cfg_req_depth( cfg_req_depth    )  ,   //how many req. buffer should hold
+    .cfg_sdr_en(    cfg_sdr_en       )  ,
+    .cfg_sdr_mode_reg(  cfg_sdr_mode_reg )  ,
+    .cfg_sdr_tras_d(    cfg_sdr_tras_d   )  ,
+    .cfg_sdr_trp_d(     cfg_sdr_trp_d    )  ,
+    .cfg_sdr_trcd_d(    cfg_sdr_trcd_d   )  ,
+    .cfg_sdr_cas(       cfg_sdr_cas      )  ,
+    .cfg_sdr_trcar_d(   cfg_sdr_trcar_d  )  ,
+    .cfg_sdr_twr_d(     cfg_sdr_twr_d    )  ,
+    .cfg_sdr_rfsh(      cfg_sdr_rfsh     )  ,
+	  .cfg_sdr_rfmax(     cfg_sdr_rfmax    )
   );
 
 endmodule

@@ -21,6 +21,7 @@ void driver::config() {
 // ************** DRIVER INIT **************** //
 void driver::init() {
     driver::config();
+    //sig_gen->init();
 
     intf_int->wb_addr_i      = 0;
     intf_int->wb_dat_i       = 0;
@@ -167,19 +168,19 @@ void checker::verify(int mnt_value, string pass_msg){
     sc_uint<32> addr = 0x0;
     sc_uint<4>  bl   = 0x0;
     sc_uint<32> data = 0x0;
-    sc_uint<4>  time = 0x0;
+    sc_uint<4>  cyc  = 0x1;
 
     // Initialization
     env->scb->n_cases = 5; // Max number of r/w to do
     env->drv->init();
     //env->sig_gen->init();
-    //time = env->sig_gen->wait_rnd_gen();
-    //wait(time);
+    //cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
 
     // Reset
     env->drv->reset();
-    //time = env->sig_gen->wait_rnd_gen();
-    //wait(time);
+    //cyc  = env->sig_gen->wait_rnd_gen();
+    wait(cyc);
 
     // TEST CASE 1
     // 1 write and 1 read
@@ -187,13 +188,13 @@ void checker::verify(int mnt_value, string pass_msg){
     //addr = env->sig_gen->addr_rnd_gen();
     //bl   = env->sig_gen->bl_rnd_gen();
     //env->drv->write(addr, bl, data);
-    //time = env->sig_gen->wait_rnd_gen();
-    //wait(time);
+    //cyc  = env->sig_gen->wait_rnd_gen();
+    wait(cyc);
 
 
     //env->drv->read(addr, bl);
-    //time = env->sig_gen->wait_rnd_gen();
-    //wait(time);
+    //cyc  = env->sig_gen->wait_rnd_gen();
+    wait(cyc);
 
     // Request for simulation termination
     cout << "=======================================" << endl;

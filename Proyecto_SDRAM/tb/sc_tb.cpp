@@ -19,9 +19,9 @@ void driver::config() {
 }
 
 // ************** DRIVER INIT **************** //
-void driver::init() {
+void driver::init(unsigned long long seed) {
     driver::config();
-    //sig_gen->init();
+    sig_gen->init(seed);
 
     intf_int->wb_addr_i      = 0;
     intf_int->wb_dat_i       = 0;
@@ -83,7 +83,51 @@ void driver::write(sc_uint<32> address, sc_uint<8> burstLenght, sc_uint<32> data
         wait(5, SC_NS);
     }
 
-    cout<<"@"<<sc_time_stamp()<<"Burst-No: "<< i <<", Write Address: "<<
+    cout<<"@"<<sc_time_stamp()<<" Burst-No: "<< i <<", Write Address: "<<
+    intf_int->wb_addr_i <<", Write Data: "<< intf_int->wb_dat_i << endl;
+  }
+
+  intf_int->wb_stb_i        = false;
+  intf_int->wb_cyc_i        = false;
+  intf_int->wb_we_i         = false; //'hx;
+  intf_int->wb_sel_i        = 0; //'hx;
+  intf_int->wb_addr_i       = 0x3FFFFFFF; //'hx;
+  intf_int->wb_dat_i        = 0xFF; //'hx;
+  //intf_int->sdram_wr_en_n   = 0xf;  // Disable write mode
+}
+
+// *********** DRIVER RANDOM WRITE  *********** //
+void driver::rnd_write() {
+
+  sc_uint<32>   address = sig_gen->addr_rnd_gen();
+  sc_uint<8>    burstLenght = sig_gen->bl_rnd_gen();
+
+  scb_int->addr_fifo.write(address);
+  scb_int->buLen_fifo.write(burstLenght);
+
+  //intf_int->sdram_wr_en_n     = 0x0; // Enable write mode
+
+  wait(5, SC_NS);
+  cout<<"Write Address: "<< address <<", Burst Size: "<< burstLenght <<endl;
+  for(int i=0; i < burstLenght; i++){
+    intf_int->wb_stb_i        = true;
+    intf_int->wb_cyc_i        = true;
+    intf_int->wb_we_i         = true;
+    intf_int->wb_sel_i        = 0b1111;
+    intf_int->wb_addr_i       = address + i;
+    intf_int->wb_dat_i        = sig_gen->data_rnd_gen();
+
+    wait(1);
+    while(true) {
+        wait(5, SC_NS);
+        if (intf_int->wb_ack_o == true) {
+            break;
+        }
+        wait(5, SC_NS);
+    }
+    scb_int->data_fifo.write(intf_int->wb_dat_i);
+
+    cout<<"@"<<sc_time_stamp()<<" Burst-No: "<< i <<", Write Address: "<<
     intf_int->wb_addr_i <<", Write Data: "<< intf_int->wb_dat_i << endl;
   }
 
@@ -124,7 +168,38 @@ void driver::read(sc_uint<32> address, sc_uint<8> burstLenght) {
   intf_int->wb_addr_i       = 0x3FFFFFFF; //'hx;
 }
 
-// ************************** MONITOR
+// *********** DRIVER SEQUENTIAL READ ************ //
+void driver::seq_read() {
+
+  sc_uint<32> address = scb_int->addr_fifo.read();
+  sc_uint<8>  burstLenght = scb_int->buLen_fifo.read();
+
+  wait(5, SC_NS);
+  cout<<"Read Address: "<< address <<", Burst Size: "<< burstLenght <<endl;
+
+  for(int j=0; j < burstLenght; j++) {
+    intf_int->wb_stb_i        = true;
+    intf_int->wb_cyc_i        = true;
+    intf_int->wb_we_i         = false;
+    intf_int->wb_addr_i       = address + j;
+
+    wait(1);
+    while(intf_int->wb_ack_o == 0b0) {
+        wait(1, SC_NS);
+    }
+
+    cout<<"@"<<sc_time_stamp()<<" Burst-No: "<< j <<", Read Address: "<<
+    intf_int->wb_addr_i <<", Read Data: "<< intf_int->wb_dat_o << endl;
+    wait(5, SC_NS);
+  }
+
+  intf_int->wb_stb_i        = false;
+  intf_int->wb_cyc_i        = false;
+  intf_int->wb_we_i         = true; //'hx;
+  intf_int->wb_addr_i       = 0x3FFFFFFF; //'hx;
+}
+
+// **************** MONITOR **************** //
 void monitor::mnt_out(){
 
   // wb_dat_i, wb_dat_o, wb_addr_i, wb_ack_o,
@@ -132,7 +207,7 @@ void monitor::mnt_out(){
   cout<<"@"<<sc_time_stamp()<<" Monitor data_out:" << intf_int->wb_dat_o << endl;
 }
 
-// ************************** CHECKER
+// **************** CHECKER **************** //
 void checker::verify(int mnt_value, string pass_msg){
 
   int scb_value =0; // scb->search();
@@ -161,39 +236,37 @@ void checker::verify(int mnt_value, string pass_msg){
 }
 
 
-// ********************* TEST ********************* //
+// **************** TEST **************** //
   void base_test::test() {
     intf_int->done = 0;
 
     sc_uint<32> addr = 0x0;
     sc_uint<4>  bl   = 0x0;
     sc_uint<32> data = 0x0;
-    sc_uint<4>  cyc  = 0x1;
+    sc_uint<4>  cyc  = 0x0;
 
     // Initialization
     env->scb->n_cases = 5; // Max number of r/w to do
-    env->drv->init();
-    //env->sig_gen->init();
-    //cyc  = env->drv->sig_gen->wait_rnd_gen();
+    env->drv->init(scv_random::pick_random_seed());
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
     // Reset
     env->drv->reset();
-    //cyc  = env->sig_gen->wait_rnd_gen();
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
     // TEST CASE 1
-    // 1 write and 1 read
-    //data = env->sig_gen->data_rnd_gen();
-    //addr = env->sig_gen->addr_rnd_gen();
-    //bl   = env->sig_gen->bl_rnd_gen();
-    //env->drv->write(addr, bl, data);
-    //cyc  = env->sig_gen->wait_rnd_gen();
+    // 1 random write and 1 read
+
+    // Write
+    env->drv->rnd_write();
+    cyc = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
-
-    //env->drv->read(addr, bl);
-    //cyc  = env->sig_gen->wait_rnd_gen();
+    // Read
+    env->drv->seq_read();
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
     // Request for simulation termination

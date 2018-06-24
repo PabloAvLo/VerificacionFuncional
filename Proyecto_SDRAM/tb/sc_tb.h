@@ -4,9 +4,8 @@
 #include "systemc.h"
 #include "scv.h"
 #include "sc_define.c"
-#include <queue>
-#include <string>
 
+// **************** INTERFACE  **************** //
 SC_MODULE (interface) {
 
     // Input Signals
@@ -69,7 +68,7 @@ SC_MODULE (interface) {
 };
 
 
-// ************************** SCOREBOARD
+// **************** SCOREBOARD *************** //
 SC_MODULE (scoreboard) {
 
   sc_fifo<sc_uint<32> > addr_fifo;
@@ -87,7 +86,8 @@ SC_MODULE (scoreboard) {
   int search(int value_to_search);
 };
 
-//************************** CONSTRAINS
+// ***************** CONSTRAINS ***************** //
+// Data Constrains
 class data_rnd_constraint : public scv_constraint_base {
 public:
   scv_smart_ptr< sc_uint<32> >  data;
@@ -99,13 +99,14 @@ public:
   }
 };
 
+// Burst length constrains
 class bl_rnd_constraint : public scv_constraint_base {
 public:
   scv_smart_ptr< sc_uint<4> >   bl; //burst lenght
 
   SCV_CONSTRAINT_CTOR(bl_rnd_constraint) {
     // Hard Constraint: bl -> {1,2,4,8}
-    SCV_CONSTRAINT ( bl() > 0 );
+    SCV_CONSTRAINT ( bl() >= 1 );
     SCV_CONSTRAINT ( bl() <= 8 );
     SCV_CONSTRAINT ( bl() != 3 );
     SCV_CONSTRAINT ( bl() != 5 );
@@ -114,6 +115,7 @@ public:
   }
 };
 
+// Address constrains
 class addr_rnd_constraint : public scv_constraint_base {
 public:
   scv_smart_ptr< sc_uint<32> >  addr;
@@ -125,6 +127,7 @@ public:
   }
 };
 
+// Time constrains
 class wait_rnd_constraint : public scv_constraint_base {
 public:
   scv_smart_ptr< sc_uint<4> >  cyc;
@@ -136,81 +139,53 @@ public:
   }
 };
 
-// class data_rnd_constraint : public scv_constraint_base {
-// public:
-//   scv_smart_ptr< sc_uint<8> > data;
-//
-//   SCV_CONSTRAINT_CTOR(data_rnd_constraint) {
-//     // Soft Constraint
-//     SCV_SOFT_CONSTRAINT ( data() < 20 ); // Max
-//     SCV_SOFT_CONSTRAINT ( data() > 0 );   // Min
-//     // Hard Constraint
-//     SCV_CONSTRAINT ( data() > 10 );
-//   }
-// };
-
-//************************** SIGNAL GENERATOR
+// ***************** SIGNAL GENERATOR ***************** //
 SC_MODULE (signal_generator) {
 
   SC_HAS_PROCESS(signal_generator);
   signal_generator(sc_module_name signal_generator) {
   }
 
-  void init() {
-      scv_random::set_global_seed(scv_random::pick_random_seed()); //FIXME: needs to come from test seed
+  // Sets global seed
+  void init(unsigned long long seed) {
+      scv_random::set_global_seed(seed);
   }
 
-  // sc_uint<32> data_rnd_gen() {
-  //     data_rnd_constraint data_rnd ("data_rnd_constraint");
-  //     data_rnd.next();
-  //     return data_rnd.data.read();
-  // }
-  //
-  // sc_uint<4> bl_rnd_gen() {
-  //     bl_rnd_constraint bl_rnd ("bl_rnd_constraint");
-  //     bl_rnd.next();
-  //     return bl_rnd.bl.read();
-  // }
-  //
-  // sc_uint<32> addr_rnd_gen() {
-  //     addr_rnd_constraint addr_rnd ("addr_rnd_constraint");
-  //     addr_rnd.next();
-  //     return addr_rnd.addr.read();
-  // }
+  // Generates random data
+  sc_uint<32> data_rnd_gen() {
+      data_rnd_constraint data_rnd ("data_rnd_constraint");
+      data_rnd.next();
+      return data_rnd.data.read();
+  }
 
+  // Generates random burst length
+  sc_uint<4> bl_rnd_gen() {
+      bl_rnd_constraint bl_rnd ("bl_rnd_constraint");
+      bl_rnd.next();
+      return bl_rnd.bl.read();
+  }
+
+  // Generates random address
+  sc_uint<32> addr_rnd_gen() {
+      addr_rnd_constraint addr_rnd ("addr_rnd_constraint");
+      addr_rnd.next();
+      return addr_rnd.addr.read();
+  }
+
+  // Generates random cycles to wait
   sc_uint<4> wait_rnd_gen() {
-      //scv_random::set_global_seed(scv_random::pick_random_seed());
       wait_rnd_constraint wait_rnd ("wait_rnd_constraint");
       wait_rnd.next();
       return wait_rnd.cyc.read();
   }
 };
 
-// SC_MODULE(stim_gen) {
-//
-//   SC_HAS_PROCESS(stim_gen);
-//   stim_gen(sc_module_name stim_gen) {
-//   }
-//
-//   void init() {
-//       scv_random::set_global_seed(scv_random::pick_random_seed());
-//   }
-//
-//   sc_uint<8> data_rnd_gen(){
-//     //scv_random::set_global_seed(scv_random::pick_random_seed()); //FIXME: needs to come from test seed
-//     data_rnd_constraint data_rnd ("data_rnd_constraint");
-//     data_rnd.next();
-//     return data_rnd.data.read();
-//   }
-//
-// };
-
-// ************************** DRIVER
+// **************** DRIVER **************** //
 SC_MODULE (driver) {
 
-  //stim_gen *stim_gen_inst;
   interface *intf_int;
   scoreboard *scb_int;
+  signal_generator *sig_gen;
 
   SC_HAS_PROCESS(driver);
   driver(sc_module_name driver, scoreboard *scb_ext, interface *intf_ext) {
@@ -222,15 +197,15 @@ SC_MODULE (driver) {
   }
 
   void config();
-  void init();
+  void init(unsigned long long);
   void reset();
   void write(sc_uint<32> address, sc_uint<8> burstLenght, sc_uint<32> data);
-  void read(sc_uint<32> address, sc_uint<8> burstLenght);
   void rnd_write();
-  void rnd_read();
+  void read(sc_uint<32> address, sc_uint<8> burstLenght);
+  void seq_read();
 };
 
-// ************************** MONITOR
+// **************** MONITOR **************** //
 SC_MODULE (monitor) {
 
   interface *intf_int;
@@ -250,7 +225,7 @@ SC_MODULE (monitor) {
 
 };
 
-// ************************** CHECKER
+// **************** CHECKER **************** //
 SC_MODULE (checker) {
 
   interface *intf_int;
@@ -272,13 +247,12 @@ SC_MODULE (checker) {
 };
 
 
-// ************************** ENVIROMENT
+// **************** ENVIROMENT **************** //
 SC_MODULE (environment) {
 
   driver *drv;
   monitor *mnt;
   scoreboard *scb;
-  signal_generator *sig_gen;
   interface *intf_int;
   checker *check;
 
@@ -294,13 +268,11 @@ SC_MODULE (environment) {
     mnt = new monitor("mnt",intf_ext);
     //Checker
     check = new checker("check",scb,mnt,intf_ext);
-    // Signal Generator
-    sig_gen = new signal_generator("sig_gen");
 
   }
 };
 
-// ************************** BASE TEST
+// **************** BASE TEST **************** //
 SC_MODULE (base_test) {
 
   interface *intf_int;
@@ -318,7 +290,7 @@ SC_MODULE (base_test) {
   }
 };
 
-// ************************** SYSTEM C TEST BENCH
+// *********** SYSTEM C TEST BENCH ************ //
 SC_MODULE (sc_tb) {
 
   base_test *test1;

@@ -102,22 +102,59 @@ SC_MODULE (driver) {
     scb_int = scb_ext;
   }
 
-  void SetUpTopWishbone();
-  void writeTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght);
-  void readTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght);
+  void config();
+  void init();
+  void reset();
+  void write(sc_uint<32> address, sc_uint<8> burstLenght, sc_uint<32> data);
+  void read(sc_uint<32> address, sc_uint<8> burstLenght);
 };
 
-// ************************** CONSTRAINS
+//************************** CONSTRAINS
 class data_rnd_constraint : public scv_constraint_base {
 public:
-  scv_smart_ptr< sc_uint<8> > data;
+  scv_smart_ptr< sc_uint<32> >  data;
 
   SCV_CONSTRAINT_CTOR(data_rnd_constraint) {
     // Soft Constraint
-    SCV_SOFT_CONSTRAINT ( data() < 20 ); // Max
-    SCV_SOFT_CONSTRAINT ( data() > 0 );   // Min
-    // Hard Constraint
-    SCV_CONSTRAINT ( data() > 10 );
+    SCV_SOFT_CONSTRAINT ( data() <= 32 ); // Max
+    SCV_SOFT_CONSTRAINT ( data() >= 1 );   // Min
+  }
+};
+
+class bl_rnd_constraint : public scv_constraint_base {
+public:
+  scv_smart_ptr< sc_uint<4> >   bl; //burst lenght
+
+  SCV_CONSTRAINT_CTOR(bl_rnd_constraint) {
+    // Hard Constraint: bl -> {1,2,4,8}
+    SCV_CONSTRAINT ( bl() > 0 );
+    SCV_CONSTRAINT ( bl() <= 8 );
+    SCV_CONSTRAINT ( bl() != 3 );
+    SCV_CONSTRAINT ( bl() != 5 );
+    SCV_CONSTRAINT ( bl() != 6 );
+    SCV_CONSTRAINT ( bl() != 7 );
+  }
+};
+
+class addr_rnd_constraint : public scv_constraint_base {
+public:
+  scv_smart_ptr< sc_uint<32> >  addr;
+
+  SCV_CONSTRAINT_CTOR(addr_rnd_constraint) {
+    // Soft Constraint
+    SCV_SOFT_CONSTRAINT ( addr() <= 400 ); // Max
+    SCV_SOFT_CONSTRAINT ( addr() >= 200 );   // Min
+  }
+};
+
+class wait_rnd_constraint : public scv_constraint_base {
+public:
+  scv_smart_ptr< sc_uint<4> >  wait;
+
+  SCV_CONSTRAINT_CTOR(wait_rnd_constraint) {
+    // Soft Constraint
+    SCV_SOFT_CONSTRAINT ( wait() <= 12 ); // Max
+    SCV_SOFT_CONSTRAINT ( wait() >= 4  ); // Min
   }
 };
 
@@ -133,11 +170,32 @@ SC_MODULE (signal_generator) {
     intf_int = intf_ext;
   }
 
-  sc_uint<8 > data_rnd_gen(){
-  scv_random::set_global_seed(scv_random::pick_random_seed()); //FIXME: needs to come from test seed
-  data_rnd_constraint data_rnd ("data_rnd_constraint");
-  data_rnd.next();
-  return data_rnd.data.read();
+  void init() {
+      scv_random::set_global_seed(scv_random::pick_random_seed()); //FIXME: needs to come from test seed
+  }
+
+  sc_uint<32> data_rnd_gen() {
+      data_rnd_constraint data_rnd ("data_rnd_constraint");
+      data_rnd.next();
+      return data_rnd.data.read();
+  }
+
+  sc_uint<4> bl_rnd_gen() {
+      bl_rnd_constraint bl_rnd ("bl_rnd_constraint");
+      bl_rnd.next();
+      return bl_rnd.bl.read();
+  }
+
+  sc_uint<32> addr_rnd_gen() {
+      addr_rnd_constraint addr_rnd ("addr_rnd_constraint");
+      addr_rnd.next();
+      return addr_rnd.addr.read();
+  }
+
+  sc_uint<4> wait_rnd_gen() {
+      wait_rnd_constraint wait_rnd ("wait_rnd_constraint");
+      wait_rnd.next();
+      return wait_rnd.wait.read();
   }
 };
 
@@ -190,11 +248,13 @@ SC_MODULE (environment) {
   monitor *mnt;
   scoreboard *scb;
   signal_generator *sig_gen;
+  interface *intf_int;
   checker *check;
 
   SC_HAS_PROCESS(environment);
   environment(sc_module_name environment, interface *intf_ext) {
 
+    intf_int = intf_ext;
     //Scoreboard
     scb = new scoreboard("scb");
     //Driver

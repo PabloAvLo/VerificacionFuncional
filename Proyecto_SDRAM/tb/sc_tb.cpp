@@ -6,7 +6,7 @@ void driver::SetUpTopWishbone(){
   intf_int->cfg_sdr_width    = 0b10;
   intf_int->cfg_colbits      = 0b00;
   intf_int->cfg_req_depth    = 0x3;
-  intf_int->cfg_sdr_en       = 0b1;
+  intf_int->cfg_sdr_en        = 0b1;
   intf_int->cfg_sdr_mode_reg = 0x033;
   intf_int->cfg_sdr_tras_d   = 0x4;
   intf_int->cfg_sdr_trp_d    = 0x2;
@@ -113,33 +113,28 @@ void driver::readTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
   intf_int->wb_addr_i       = 0x3FFFFFFF; //'hx;
 }
 
-// ************************** MONITOR / CHECKER (READ)
-  void monitor::mnt_out(){
+// ************************** MONITOR
+void monitor::mnt_out(){
 
-    while(true){
-    wait(1);
-    sc_uint<32> address = scb_int->addr_fifo.read();
-    sc_uint<8>  burstLenght = scb_int->buLen_fifo.read();
-    sc_uint<32> expectedData;
+  // wb_dat_i, wb_dat_o, wb_addr_i, wb_ack_o,
+  // sdr_addr, sdr_dq, app_req*, sdr_dout* (sdr_dq), sdr_den_n*,
+  cout<<"@"<<sc_time_stamp()<<" Monitor data_out:" << intf_int->wb_dat_o << endl;
+}
 
-    wait(5, SC_NS);
+// ************************** CHECKER
+void checker::verify(int mnt_value, string pass_msg){
 
-    for(int j=0; j < burstLenght; j++) {
-      intf_int->wb_stb_i        = true;
-      intf_int->wb_cyc_i        = true;
-      intf_int->wb_we_i         = false;
-      intf_int->wb_addr_i       = (address >> 2) + j; // Address[31:2]+j;
-      expectedData              = scb_int->data_fifo.read(); // Exptected Read Data
+  int scb_value =0; // scb->search();
+  if(mnt_value == scb_value){
+    cout<< "PASS: "<<pass_msg <<endl;
+  }
+  else{
+    cout<< "FAIL: Monitor value "<< mnt_value << "does not match with expected scoreboard value "<<scb_value <<endl;
+    intf_int->errCnt += 1;
+  }
 
-      wait(1);
-      while(intf_int->wb_ack_o == 0b0) {
-          wait(1, SC_NS);
-      }
 
-      // --------------------------  Monitor
-      cout<<"@"<<sc_time_stamp()<<" Monitor data_out:" << intf_int->wb_dat_o << endl;
-      cout<<"@"<<sc_time_stamp()<<" Scoreboard data_out:" << expectedData << endl;
-
+/*
       // -------------------------- Checker
       if(intf_int->wb_dat_o != expectedData) {
         cout<<"READ ERROR: Burst-No: "<< j <<", Addr: "<< intf_int->wb_addr_i
@@ -151,13 +146,7 @@ void driver::readTopWishbone(sc_uint<32> &address, sc_uint<8> &burstLenght){
         <<" Rxp: " << intf_int->wb_dat_o << endl;
       }
 
-      wait(5, SC_NS);
-    }
-    intf_int->wb_stb_i        = false;
-    intf_int->wb_cyc_i        = false;
-    intf_int->wb_we_i         = true; //'hx;
-    intf_int->wb_addr_i       = 0x3FFFFFFF; //'hx
-  }
+  }*/
 }
 
 

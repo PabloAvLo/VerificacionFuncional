@@ -5,6 +5,7 @@
 #include "scv.h"
 #include "sc_define.c"
 #include <queue>
+#include <string>
 
 SC_MODULE (interface) {
 
@@ -81,6 +82,9 @@ SC_MODULE (scoreboard) {
     sc_fifo<sc_uint<8> > buLen_fifo (100); //n_cases);
     sc_fifo<sc_uint<32> > data_fifo (100); //n_cases);
   }
+
+  // Can search address, data and burstLenghts
+  int search(int value_to_search);
 };
 
 
@@ -141,22 +145,40 @@ SC_MODULE (signal_generator) {
 SC_MODULE (monitor) {
 
   interface *intf_int;
-  scoreboard *scb_int;
 
   sc_uint<8> data_out_exp;
   sc_uint<8> data_out_read;
 
   SC_HAS_PROCESS(monitor);
-  monitor(sc_module_name monitor, scoreboard *scb_ext, interface *intf_ext) {
+  monitor(sc_module_name monitor, interface *intf_ext) {
     //Interface
     intf_int=intf_ext;
-    //Scoreboard
-    scb_int = scb_ext;
     SC_THREAD(mnt_out);
     //sensitive << intf_int->rd_en.pos();
   }
 
   void mnt_out();
+
+};
+
+// ************************** CHECKER
+SC_MODULE (checker) {
+
+  interface *intf_int;
+  scoreboard *scb_int;
+  monitor *mnt_int;
+
+  SC_HAS_PROCESS(checker);
+  checker(sc_module_name checker, scoreboard *scb_ext, monitor *mnt_ext, interface *intf_ext) {
+    //Interface
+    intf_int=intf_ext;
+    //Scoreboard
+    scb_int = scb_ext;
+    //Monitor
+    mnt_int = mnt_ext;
+  }
+
+  void verify(int mnt_value, string pass_msg);
 
 };
 
@@ -168,6 +190,7 @@ SC_MODULE (environment) {
   monitor *mnt;
   scoreboard *scb;
   signal_generator *sig_gen;
+  checker *check;
 
   SC_HAS_PROCESS(environment);
   environment(sc_module_name environment, interface *intf_ext) {
@@ -177,7 +200,9 @@ SC_MODULE (environment) {
     //Driver
     drv = new driver("drv",scb,intf_ext);
     //Monitor
-    mnt = new monitor("mnt",scb,intf_ext);
+    mnt = new monitor("mnt",intf_ext);
+    //Checker
+    check = new checker("check",scb,mnt,intf_ext);
     // Signal Generator
     sig_gen = new signal_generator("sig_gen",intf_ext);
 

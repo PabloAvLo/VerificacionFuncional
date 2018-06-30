@@ -94,8 +94,8 @@ public:
 
   SCV_CONSTRAINT_CTOR(data_rnd_constraint) {
     // Soft Constraint
-    SCV_SOFT_CONSTRAINT ( data() <= 32 ); // Max
-    SCV_SOFT_CONSTRAINT ( data() >= 1 );   // Min
+    SCV_SOFT_CONSTRAINT ( data() <= MAX_DATA );
+    SCV_SOFT_CONSTRAINT ( data() >= MIN_DATA );
   }
 };
 
@@ -106,12 +106,9 @@ public:
 
   SCV_CONSTRAINT_CTOR(bl_rnd_constraint) {
     // Hard Constraint: bl -> {1,2,4,8}
-    SCV_CONSTRAINT ( bl() >= 1 );
-    SCV_CONSTRAINT ( bl() <= 8 );
-    SCV_CONSTRAINT ( bl() != 3 );
-    SCV_CONSTRAINT ( bl() != 5 );
-    SCV_CONSTRAINT ( bl() != 6 );
-    SCV_CONSTRAINT ( bl() != 7 );
+    bl->keep_only(MIN_BL, MAX_BL);
+    bl->keep_out(LOW_LIM_BL, HIGH_LIM_BL);
+    SCV_CONSTRAINT ( bl() != NO_VALID_BL );
   }
 };
 
@@ -122,8 +119,8 @@ public:
 
   SCV_CONSTRAINT_CTOR(addr_rnd_constraint) {
     // Soft Constraint
-    SCV_SOFT_CONSTRAINT ( addr() <= 400 ); // Max
-    SCV_SOFT_CONSTRAINT ( addr() >= 200 );   // Min
+    SCV_SOFT_CONSTRAINT ( addr() <= MAX_ADDR );
+    SCV_SOFT_CONSTRAINT ( addr() >= MIN_ADDR );
   }
 };
 
@@ -134,8 +131,8 @@ public:
 
   SCV_CONSTRAINT_CTOR(wait_rnd_constraint) {
     // Soft Constraint
-    SCV_SOFT_CONSTRAINT ( cyc() < 12 ); // Max
-    SCV_SOFT_CONSTRAINT ( cyc() > 4  ); // Min
+    SCV_SOFT_CONSTRAINT ( cyc() <= MAX_CYC );
+    SCV_SOFT_CONSTRAINT ( cyc() >= MIN_CYC );
   }
 };
 

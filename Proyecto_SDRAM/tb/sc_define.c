@@ -17,3 +17,17 @@
 
 #define SDR_RFSH_TIMER_W    12
 #define SDR_RFSH_ROW_CNT_W  3
+
+// Limits for constrains
+
+#define MAX_DATA    511
+#define MIN_DATA    0
+#define MAX_ADDR    2048
+#define MIN_ADDR    1024
+#define MAX_BL      8
+#define MIN_BL      1
+#define LOW_LIM_BL  5
+#define HIGH_LIM_BL 7
+#define NO_VALID_BL 3
+#define MIN_CYC     2
+#define MAX_CYC     10

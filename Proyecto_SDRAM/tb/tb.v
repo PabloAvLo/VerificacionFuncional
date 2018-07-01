@@ -11,7 +11,7 @@ reg [1:0]         cfg_colbits;
 // WB bus
 reg               wb_rst_i;
 reg               wb_stb_i;
-reg [`APP_AW-1:0] wb_addr_i;
+reg [25:0]        wb_addr_i;
 reg               wb_we_i;
 reg [`dw-1:0]     wb_dat_i;
 reg [`dw/8-1:0]   wb_sel_i;

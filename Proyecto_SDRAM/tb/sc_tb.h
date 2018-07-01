@@ -287,16 +287,115 @@ SC_MODULE (base_test) {
   }
 };
 
+// ************* BASIC FUNCTIONALITY *************** //
+SC_MODULE (basic_func) {
+
+  interface *intf_int;
+  environment *env;
+
+  void test ();
+
+  SC_HAS_PROCESS(basic_func);
+  basic_func(sc_module_name basic_func, interface *intf_ext) {
+    intf_int = intf_ext;
+    //environment
+    env = new environment("env",intf_ext);
+    SC_CTHREAD(test,intf_ext->wb_clk_i.pos());
+
+  }
+};
+
+// ************* READ AFTER RESET *************** //
+SC_MODULE (rd_after_rst) {
+
+  interface *intf_int;
+  environment *env;
+
+  void test ();
+
+  SC_HAS_PROCESS(rd_after_rst);
+  rd_after_rst(sc_module_name rd_after_rst, interface *intf_ext) {
+    intf_int = intf_ext;
+    //environment
+    env = new environment("env",intf_ext);
+    SC_CTHREAD(test,intf_ext->wb_clk_i.pos());
+
+  }
+};
+
+// ************* OVERWRITE DATA *************** //
+SC_MODULE (overwrite) {
+
+  interface *intf_int;
+  environment *env;
+
+  void test ();
+
+  SC_HAS_PROCESS(overwrite);
+  overwrite(sc_module_name overwrite, interface *intf_ext) {
+    intf_int = intf_ext;
+    //environment
+    env = new environment("env",intf_ext);
+    SC_CTHREAD(test,intf_ext->wb_clk_i.pos());
+
+  }
+};
+
+// ************* CROSS OVER *************** //
+SC_MODULE (cross_over) {
+
+  interface *intf_int;
+  environment *env;
+
+  void test ();
+
+  SC_HAS_PROCESS(cross_over);
+  cross_over(sc_module_name cross_over, interface *intf_ext) {
+    intf_int = intf_ext;
+    //environment
+    env = new environment("env",intf_ext);
+    SC_CTHREAD(test,intf_ext->wb_clk_i.pos());
+
+  }
+};
+
+// ********** RANDOM WRITE/READ *********** //
+SC_MODULE (rnd_wr_rd) {
+
+  interface *intf_int;
+  environment *env;
+
+  void test ();
+
+  SC_HAS_PROCESS(rnd_wr_rd);
+  rnd_wr_rd(sc_module_name rnd_wr_rd, interface *intf_ext) {
+    intf_int = intf_ext;
+    //environment
+    env = new environment("env",intf_ext);
+    SC_CTHREAD(test,intf_ext->wb_clk_i.pos());
+
+  }
+};
+
 // *********** SYSTEM C TEST BENCH ************ //
 SC_MODULE (sc_tb) {
 
-  base_test *test1;
-  interface *intf;
+  base_test     *test1;
+  basic_func    *test2;
+  rd_after_rst  *test3;
+  overwrite     *test4;
+  cross_over    *test5;
+  rnd_wr_rd     *test6;
+  interface     *intf;
 
   SC_CTOR(sc_tb) {
-    intf = new interface("intf");
-    test1 = new base_test("test1",intf);
-
+    intf  = new interface("intf");
+    // test1 = new base_test("test1",intf);
+    test2 = new basic_func("test2",intf);
+    // test3 = new rd_after_rst("test3",intf);
+    // test4 = new overwrite("test4",intf);
+    // test5 = new cross_over("test5",intf);
+    // test6 = new rnd_wr_rd("test6",intf);
   }
 };
 

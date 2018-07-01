@@ -71,7 +71,7 @@ void driver::write(sc_uint<32> address, sc_uint<8> burstLenght, sc_uint<32> data
     intf_int->wb_cyc_i        = true;
     intf_int->wb_we_i         = true;
     intf_int->wb_sel_i        = 0b1111;
-    intf_int->wb_addr_i       = (address /*>> 2*/) + i; // Address[31:2]+i;
+    intf_int->wb_addr_i       = (address >> 2) + i; // Address[31:2]+i;
     intf_int->wb_dat_i        = data;
 
     wait(1);
@@ -114,7 +114,7 @@ void driver::rnd_write() {
     intf_int->wb_cyc_i        = true;
     intf_int->wb_we_i         = true;
     intf_int->wb_sel_i        = 0b1111;
-    intf_int->wb_addr_i       = address + i;
+    intf_int->wb_addr_i       = (address >> 2) + i; // Address[31:2]+i;
     intf_int->wb_dat_i        = sig_gen->data_rnd_gen();
 
     wait(1);
@@ -150,7 +150,7 @@ void driver::read(sc_uint<32> address, sc_uint<8> burstLenght) {
     intf_int->wb_stb_i        = true;
     intf_int->wb_cyc_i        = true;
     intf_int->wb_we_i         = false;
-    intf_int->wb_addr_i       = (address /*>> 2*/) + j; // Address[31:2]+j;
+    intf_int->wb_addr_i       = (address >> 2) + j; // Address[31:2]+j;
 
     wait(1);
     while(intf_int->wb_ack_o == 0b0) {
@@ -181,7 +181,7 @@ void driver::seq_read() {
     intf_int->wb_stb_i        = true;
     intf_int->wb_cyc_i        = true;
     intf_int->wb_we_i         = false;
-    intf_int->wb_addr_i       = address + j;
+    intf_int->wb_addr_i       = (address >> 2) + j; // Address[31:2]+j;
 
     wait(1);
     while(intf_int->wb_ack_o == 0b0) {
@@ -236,7 +236,8 @@ void checker::verify(int mnt_value, string pass_msg){
 }
 
 
-// **************** TEST **************** //
+// ************* BASE TEST ************ //
+// Inits sdram and applied reset
   void base_test::test() {
     intf_int->done = 0;
 
@@ -246,7 +247,6 @@ void checker::verify(int mnt_value, string pass_msg){
     sc_uint<4>  cyc  = 0x0;
 
     // Initialization
-    env->scb->n_cases = 5; // Max number of r/w to do
     env->drv->init(scv_random::pick_random_seed());
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
@@ -256,16 +256,44 @@ void checker::verify(int mnt_value, string pass_msg){
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
-    // TEST CASE 1
-    // 1 random write and 1 read
+    // Request for simulation termination
+    cout << "=======================================" << endl;
+    cout << " SIMULATION END" << endl;
+    cout << "=======================================" << endl;
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+    intf_int->done = 1;
+    // Just wait for few cycles
+  }
+
+// ************* BASIC FUNCTIONALITY ************ //
+// Makes one write and one read
+  void basic_func::test() {
+    intf_int->done = 0;
+
+    sc_uint<32> addr = 0x0;
+    sc_uint<4>  bl   = 0x0;
+    sc_uint<32> data = 0x0;
+    sc_uint<4>  cyc  = 0x0;
+
+    // Initialization
+    env->scb->n_cases = 1; // Max number of r/w to do
+    env->drv->init(scv_random::pick_random_seed());
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Reset
+    env->drv->reset();
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
 
     // Write
-    env->drv->rnd_write();
+    env->drv->write(0x40000, 1,  8);
     cyc = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
     // Read
-    env->drv->seq_read();
+    env->drv->read(0x40000, 1);
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
@@ -273,7 +301,8 @@ void checker::verify(int mnt_value, string pass_msg){
     cout << "=======================================" << endl;
     cout << " SIMULATION END" << endl;
     cout << "=======================================" << endl;
-    wait(10);
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
     intf_int->done = 1;
     // Just wait for few cycles
   }

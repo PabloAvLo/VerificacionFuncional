@@ -1,6 +1,6 @@
 #!/bin/sh
 echo 'Cleaning the directory'
-rm -rf *.o *.vvp *.vpi *vcd
+rm -rf *.o *.vvp *.vpi *vcd tmp*
 echo 'Compiling *.c *cpp files'
 g++ -fpic -c sc_tb_vpi.c sc_vpi.c sc_tb.cpp -I /usr/include/iverilog/ -I /usr/local/systemc-2.3.2/include/ -I /usr/local/scv-2.0.1/include/
 echo 'Creating vpi file'

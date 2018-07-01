@@ -22,8 +22,8 @@
 
 #define MAX_DATA    511
 #define MIN_DATA    0
-#define MAX_ADDR    2048
-#define MIN_ADDR    1024
+#define MAX_ADDR    0x4000
+#define MIN_ADDR    0x003FFFFF
 #define MAX_BL      8
 #define MIN_BL      1
 #define LOW_LIM_BL  5

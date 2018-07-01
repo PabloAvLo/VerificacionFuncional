@@ -27,5 +27,5 @@
 `define  FPGA            1'b0
 `define  TARGET_DESIGN   `FPGA
 // 12 bit subtractor is not feasibile for FPGA, so changed to 6 bits
-`define  REQ_BW    (`TARGET_DESIGN == `FPGA) ? 6 : 12   //  Request Width
-
+//`define  REQ_BW    (`TARGET_DESIGN == `FPGA) ? 6 : 12   //  Request Width
+`define  REQ_BW          6

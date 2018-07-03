@@ -157,7 +157,7 @@ void driver::read(sc_uint<32> address, sc_uint<8> burstLenght) {
     while(intf_int->wb_ack_o == 0b0) {
         wait(1);//, SC_NS);
     }
-    wait(1);
+    wait(2);
 
     cout<<"@"<<sc_time_stamp()<<"Burst-No: "<< j <<", Read Address: "<<
     intf_int->wb_addr_i <<", Read Data: "<< intf_int->wb_dat_o << endl;

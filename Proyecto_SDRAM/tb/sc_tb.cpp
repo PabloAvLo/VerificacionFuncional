@@ -51,6 +51,7 @@ void driver::reset() {
   while(intf_int->sdr_init_done == 0) {
       wait(1);
   }
+  //wait(10000);
   cout<<"SDRAM is ready!"<<endl;
   wait(100);
 }
@@ -154,8 +155,9 @@ void driver::read(sc_uint<32> address, sc_uint<8> burstLenght) {
 
     wait(1);
     while(intf_int->wb_ack_o == 0b0) {
-        wait(1, SC_NS);
+        wait(1);//, SC_NS);
     }
+    wait(1);
 
     cout<<"@"<<sc_time_stamp()<<"Burst-No: "<< j <<", Read Address: "<<
     intf_int->wb_addr_i <<", Read Data: "<< intf_int->wb_dat_o << endl;
@@ -293,7 +295,193 @@ void checker::verify(int mnt_value, string pass_msg){
     wait(cyc);
 
     // Read
+    //env->drv->seq_read();
     env->drv->read(0x40000, 1);
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Request for simulation termination
+    cout << "=======================================" << endl;
+    cout << " SIMULATION END" << endl;
+    cout << "=======================================" << endl;
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+    intf_int->done = 1;
+    // Just wait for few cycles
+  }
+
+// ********** READ AFTER RESET ************ //
+// Reads data after reset memory
+  void rd_after_rst::test() {
+    intf_int->done = 0;
+
+    sc_uint<32> addr = 0x0;
+    sc_uint<4>  bl   = 0x0;
+    sc_uint<32> data = 0x0;
+    sc_uint<4>  cyc  = 0x0;
+
+    // Initialization
+    env->scb->n_cases = 1; // Max number of r/w to do
+    env->drv->init(scv_random::pick_random_seed());
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Reset
+    env->drv->reset();
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Write
+    env->drv->write(0x40000, 1,  8);
+    cyc = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Read
+    env->drv->read(0x40000, 1);
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Reset
+    env->drv->reset();
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Read
+    env->drv->read(0x40000, 1);
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Request for simulation termination
+    cout << "=======================================" << endl;
+    cout << " SIMULATION END" << endl;
+    cout << "=======================================" << endl;
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+    intf_int->done = 1;
+    // Just wait for few cycles
+  }
+
+// ********** OVERWRITE DATA ************ //
+// Reads data after reset memory
+  void overwrite::test() {
+    intf_int->done = 0;
+
+    sc_uint<32> addr = 0x0;
+    sc_uint<4>  bl   = 0x0;
+    sc_uint<32> data = 0x0;
+    sc_uint<4>  cyc  = 0x0;
+
+    // Initialization
+    env->scb->n_cases = 1; // Max number of r/w to do
+    env->drv->init(scv_random::pick_random_seed());
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Reset
+    env->drv->reset();
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Write
+    env->drv->write(0x40000, 1,  8);
+    cyc = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Read
+    env->drv->read(0x40000, 1);
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Overwrite data
+    env->drv->write(0x40000, 1,  26);
+    cyc = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Read
+    env->drv->read(0x40000, 1);
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Request for simulation termination
+    cout << "=======================================" << endl;
+    cout << " SIMULATION END" << endl;
+    cout << "=======================================" << endl;
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+    intf_int->done = 1;
+    // Just wait for few cycles
+  }
+
+// ********** PAGE CROSS OVER ************ //
+// Creates a page cross over
+  void cross_over::test() {
+    intf_int->done = 0;
+
+    sc_uint<32> addr = 0x0;
+    sc_uint<4>  bl   = 0x0;
+    sc_uint<32> data = 0x0;
+    sc_uint<4>  cyc  = 0x0;
+
+    // Initialization
+    env->scb->n_cases = 24; // Max number of r/w to do
+    env->drv->init(scv_random::pick_random_seed());
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Writes data...
+    env->drv->write(0x00000FF0, 0x8, 1);
+    // env->drv->write(0x00000FF0, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00010FF4, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00020FF8, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00030FFC, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00040FE0, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00050FE4, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00060FE8, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00070FEC, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00080FD0, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00090FD4, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x000A0FD8, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x000B0FDC, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x000C0FC0, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x000D0FC4, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x000E0FC8, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x000F0FCC, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00100FB0, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00110FB4, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00120FB8, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00130FBC, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00140FA0, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00150FA4, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00160FA8, 0x8, env->drv->sig_gen->data_rnd_gen());
+    // env->drv->write(0x00170FAC, 0x8, env->drv->sig_gen->data_rnd_gen());
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Reads data
+    env->drv->read(0x00000FF0, 0x8);
+    // env->drv->read(0x00010FF4, 0x8);
+    // env->drv->read(0x00020FF8, 0x8);
+    // env->drv->read(0x00030FFC, 0x8);
+    // env->drv->read(0x00040FE0, 0x8);
+    // env->drv->read(0x00050FE4, 0x8);
+    // env->drv->read(0x00060FE8, 0x8);
+    // env->drv->read(0x00070FEC, 0x8);
+    // env->drv->read(0x00080FD0, 0x8);
+    // env->drv->read(0x00090FD4, 0x8);
+    // env->drv->read(0x000A0FD8, 0x8);
+    // env->drv->read(0x000B0FDC, 0x8);
+    // env->drv->read(0x000C0FC0, 0x8);
+    // env->drv->read(0x000D0FC4, 0x8);
+    // env->drv->read(0x000E0FC8, 0x8);
+    // env->drv->read(0x000F0FCC, 0x8);
+    // env->drv->read(0x00100FB0, 0x8);
+    // env->drv->read(0x00110FB4, 0x8);
+    // env->drv->read(0x00120FB8, 0x8);
+    // env->drv->read(0x00130FBC, 0x8);
+    // env->drv->read(0x00140FA0, 0x8);
+    // env->drv->read(0x00150FA4, 0x8);
+    // env->drv->read(0x00160FA8, 0x8);
+    // env->drv->read(0x00170FAC, 0x8);
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 

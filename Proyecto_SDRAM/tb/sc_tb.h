@@ -391,7 +391,7 @@ SC_MODULE (sc_tb) {
   SC_CTOR(sc_tb) {
     intf  = new interface("intf");
     // test1 = new base_test("test1",intf);
-    test2 = new basic_func("test2",intf);
+    // test2 = new basic_func("test2",intf);
     // test3 = new rd_after_rst("test3",intf);
     // test4 = new overwrite("test4",intf);
     // test5 = new cross_over("test5",intf);

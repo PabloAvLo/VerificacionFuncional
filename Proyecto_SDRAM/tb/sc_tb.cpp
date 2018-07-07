@@ -34,6 +34,9 @@ void driver::init(unsigned long long seed) {
     //intf_int->sdram_wr_en_n  = 0xf;
     intf_int->errCnt         = 0;
     wait(10);
+
+    // Reset
+    reset();
 }
 
 // ************** DRIVER RESET **************** //
@@ -51,7 +54,7 @@ void driver::reset() {
   while(intf_int->sdr_init_done == 0) {
       wait(1);
   }
-  //wait(10000);
+
   cout<<"SDRAM is ready!"<<endl;
   wait(100);
 }
@@ -62,8 +65,6 @@ void driver::write(sc_uint<32> address, sc_uint<8> burstLenght, sc_uint<32> data
   scb_int->addr_fifo.write(address);
   scb_int->buLen_fifo.write(burstLenght);
   scb_int->data_fifo.write(data);
-
-  //intf_int->sdram_wr_en_n     = 0x0; // Enable write mode
 
   wait(5, SC_NS);
   cout<<"Write Address: "<< address <<", Burst Size: "<< burstLenght <<endl;
@@ -76,17 +77,16 @@ void driver::write(sc_uint<32> address, sc_uint<8> burstLenght, sc_uint<32> data
     intf_int->wb_dat_i        = data;
 
     wait(1);
-    while(true) {
-        wait(5, SC_NS);
-        if (intf_int->wb_ack_o == true) {
-            break;
-        }
-        wait(5, SC_NS);
+    while(intf_int->wb_ack_o == 0b0) {
+        wait(1);
     }
+    wait(5, SC_NS);
 
     cout<<"@"<<sc_time_stamp()<<" Burst-No: "<< i <<", Write Address: "<<
     intf_int->wb_addr_i <<", Write Data: "<< intf_int->wb_dat_i << endl;
   }
+
+  wait(10);
 
   intf_int->wb_stb_i        = false;
   intf_int->wb_cyc_i        = false;
@@ -94,7 +94,6 @@ void driver::write(sc_uint<32> address, sc_uint<8> burstLenght, sc_uint<32> data
   intf_int->wb_sel_i        = 0; //'hx;
   intf_int->wb_addr_i       = 0x3FFFFFFF; //'hx;
   intf_int->wb_dat_i        = 0xFF; //'hx;
-  //intf_int->sdram_wr_en_n   = 0xf;  // Disable write mode
 }
 
 // *********** DRIVER RANDOM WRITE  *********** //
@@ -105,8 +104,6 @@ void driver::rnd_write() {
 
   scb_int->addr_fifo.write(address);
   scb_int->buLen_fifo.write(burstLenght);
-
-  //intf_int->sdram_wr_en_n     = 0x0; // Enable write mode
 
   wait(5, SC_NS);
   cout<<"Write Address: "<< address <<", Burst Size: "<< burstLenght <<endl;
@@ -119,18 +116,17 @@ void driver::rnd_write() {
     intf_int->wb_dat_i        = sig_gen->data_rnd_gen();
 
     wait(1);
-    while(true) {
-        wait(5, SC_NS);
-        if (intf_int->wb_ack_o == true) {
-            break;
-        }
-        wait(5, SC_NS);
+    while(intf_int->wb_ack_o == 0b0) {
+        wait(1);
     }
+    wait(5, SC_NS);
     scb_int->data_fifo.write(intf_int->wb_dat_i);
 
     cout<<"@"<<sc_time_stamp()<<" Burst-No: "<< i <<", Write Address: "<<
     intf_int->wb_addr_i <<", Write Data: "<< intf_int->wb_dat_i << endl;
   }
+
+  wait(1);
 
   intf_int->wb_stb_i        = false;
   intf_int->wb_cyc_i        = false;
@@ -138,7 +134,6 @@ void driver::rnd_write() {
   intf_int->wb_sel_i        = 0; //'hx;
   intf_int->wb_addr_i       = 0x3FFFFFFF; //'hx;
   intf_int->wb_dat_i        = 0xFF; //'hx;
-  //intf_int->sdram_wr_en_n   = 0xf;  // Disable write mode
 }
 
 // ******************* DRIVER READ *************** //
@@ -155,9 +150,14 @@ void driver::read(sc_uint<32> address, sc_uint<8> burstLenght) {
 
     wait(1);
     while(intf_int->wb_ack_o == 0b0) {
-        wait(1);//, SC_NS);
+        wait(1);
     }
-    wait(2);
+
+    // It is neccesary to do this 2 times due to systemC sync problems
+    wait(1);
+    while(intf_int->wb_ack_o == 0b0) {
+        wait(1);
+    }
 
     cout<<"@"<<sc_time_stamp()<<"Burst-No: "<< j <<", Read Address: "<<
     intf_int->wb_addr_i <<", Read Data: "<< intf_int->wb_dat_o << endl;
@@ -187,7 +187,7 @@ void driver::seq_read() {
 
     wait(1);
     while(intf_int->wb_ack_o == 0b0) {
-        wait(1, SC_NS);
+        wait(1);
     }
 
     cout<<"@"<<sc_time_stamp()<<" Burst-No: "<< j <<", Read Address: "<<
@@ -253,11 +253,6 @@ void checker::verify(int mnt_value, string pass_msg){
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
-    // Reset
-    env->drv->reset();
-    cyc  = env->drv->sig_gen->wait_rnd_gen();
-    wait(cyc);
-
     // Request for simulation termination
     cout << "=======================================" << endl;
     cout << " SIMULATION END" << endl;
@@ -281,11 +276,6 @@ void checker::verify(int mnt_value, string pass_msg){
     // Initialization
     env->scb->n_cases = 1; // Max number of r/w to do
     env->drv->init(scv_random::pick_random_seed());
-    cyc  = env->drv->sig_gen->wait_rnd_gen();
-    wait(cyc);
-
-    // Reset
-    env->drv->reset();
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
@@ -323,11 +313,6 @@ void checker::verify(int mnt_value, string pass_msg){
     // Initialization
     env->scb->n_cases = 1; // Max number of r/w to do
     env->drv->init(scv_random::pick_random_seed());
-    cyc  = env->drv->sig_gen->wait_rnd_gen();
-    wait(cyc);
-
-    // Reset
-    env->drv->reset();
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
@@ -374,11 +359,6 @@ void checker::verify(int mnt_value, string pass_msg){
     // Initialization
     env->scb->n_cases = 1; // Max number of r/w to do
     env->drv->init(scv_random::pick_random_seed());
-    cyc  = env->drv->sig_gen->wait_rnd_gen();
-    wait(cyc);
-
-    // Reset
-    env->drv->reset();
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
@@ -429,24 +409,23 @@ void checker::verify(int mnt_value, string pass_msg){
     wait(cyc);
 
     // Writes data...
-    env->drv->write(0x00000FF0, 0x8, 1);
-    // env->drv->write(0x00000FF0, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x00010FF4, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x00020FF8, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x00030FFC, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x00040FE0, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x00050FE4, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x00060FE8, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x00070FEC, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x00080FD0, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x00090FD4, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x000A0FD8, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x000B0FDC, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x000C0FC0, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x000D0FC4, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x000E0FC8, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x000F0FCC, 0x8, env->drv->sig_gen->data_rnd_gen());
-    // env->drv->write(0x00100FB0, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x00000FF0, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x00010FF4, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x00020FF8, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x00030FFC, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x00040FE0, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x00050FE4, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x00060FE8, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x00070FEC, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x00080FD0, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x00090FD4, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x000A0FD8, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x000B0FDC, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x000C0FC0, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x000D0FC4, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x000E0FC8, 0x8, env->drv->sig_gen->data_rnd_gen());
+    env->drv->write(0x000F0FCC, 0x8, env->drv->sig_gen->data_rnd_gen());
+    //env->drv->write(0x00100FB0, 0x8, env->drv->sig_gen->data_rnd_gen());
     // env->drv->write(0x00110FB4, 0x8, env->drv->sig_gen->data_rnd_gen());
     // env->drv->write(0x00120FB8, 0x8, env->drv->sig_gen->data_rnd_gen());
     // env->drv->write(0x00130FBC, 0x8, env->drv->sig_gen->data_rnd_gen());
@@ -459,29 +438,29 @@ void checker::verify(int mnt_value, string pass_msg){
 
     // Reads data
     env->drv->read(0x00000FF0, 0x8);
-    // env->drv->read(0x00010FF4, 0x8);
-    // env->drv->read(0x00020FF8, 0x8);
-    // env->drv->read(0x00030FFC, 0x8);
-    // env->drv->read(0x00040FE0, 0x8);
-    // env->drv->read(0x00050FE4, 0x8);
-    // env->drv->read(0x00060FE8, 0x8);
-    // env->drv->read(0x00070FEC, 0x8);
-    // env->drv->read(0x00080FD0, 0x8);
-    // env->drv->read(0x00090FD4, 0x8);
-    // env->drv->read(0x000A0FD8, 0x8);
-    // env->drv->read(0x000B0FDC, 0x8);
-    // env->drv->read(0x000C0FC0, 0x8);
-    // env->drv->read(0x000D0FC4, 0x8);
-    // env->drv->read(0x000E0FC8, 0x8);
-    // env->drv->read(0x000F0FCC, 0x8);
-    // env->drv->read(0x00100FB0, 0x8);
-    // env->drv->read(0x00110FB4, 0x8);
-    // env->drv->read(0x00120FB8, 0x8);
-    // env->drv->read(0x00130FBC, 0x8);
-    // env->drv->read(0x00140FA0, 0x8);
-    // env->drv->read(0x00150FA4, 0x8);
-    // env->drv->read(0x00160FA8, 0x8);
-    // env->drv->read(0x00170FAC, 0x8);
+    env->drv->read(0x00010FF4, 0x8);
+    env->drv->read(0x00020FF8, 0x8);
+    env->drv->read(0x00030FFC, 0x8);
+    env->drv->read(0x00040FE0, 0x8);
+    env->drv->read(0x00050FE4, 0x8);
+    env->drv->read(0x00060FE8, 0x8);
+    env->drv->read(0x00070FEC, 0x8);
+    env->drv->read(0x00080FD0, 0x8);
+    env->drv->read(0x00090FD4, 0x8);
+    env->drv->read(0x000A0FD8, 0x8);
+    env->drv->read(0x000B0FDC, 0x8);
+    env->drv->read(0x000C0FC0, 0x8);
+    env->drv->read(0x000D0FC4, 0x8);
+    env->drv->read(0x000E0FC8, 0x8);
+    env->drv->read(0x000F0FCC, 0x8);
+    env->drv->read(0x00100FB0, 0x8);
+    env->drv->read(0x00110FB4, 0x8);
+    env->drv->read(0x00120FB8, 0x8);
+    env->drv->read(0x00130FBC, 0x8);
+    env->drv->read(0x00140FA0, 0x8);
+    env->drv->read(0x00150FA4, 0x8);
+    env->drv->read(0x00160FA8, 0x8);
+    env->drv->read(0x00170FAC, 0x8);
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 

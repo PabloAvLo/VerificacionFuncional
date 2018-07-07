@@ -120,7 +120,7 @@ sdrc_top #(.SDR_DW(`SDR_DW),.SDR_BW(`SDR_BW),.dw(`dw),.APP_AW(`APP_AW))
   wire #(2.0) sdram_clk_d   = sdram_clk;
 
   mt48lc8m8a2 #(.data_bits(8)) u_sdram8 (
-            .Dq                 (sdr_dq             ) ,
+            .Dq                 (sdr_dq             ),
             .Addr               (sdr_addr[11:0]     ),
             .Ba                 (sdr_ba             ),
             .Clk                (sdram_clk_d        ),

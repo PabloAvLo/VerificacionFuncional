@@ -106,9 +106,15 @@ public:
 
   SCV_CONSTRAINT_CTOR(bl_rnd_constraint) {
     // Hard Constraint: bl -> {1,2,4,8}
-    bl->keep_only(MIN_BL, MAX_BL);
-    bl->keep_out(LOW_LIM_BL, HIGH_LIM_BL);
-    SCV_CONSTRAINT ( bl() != NO_VALID_BL );
+    // bl->keep_only(MIN_BL, MAX_BL);
+    // bl->keep_out(LOW_LIM_BL, HIGH_LIM_BL);
+    // SCV_CONSTRAINT ( bl() != NO_VALID_BL );
+    SCV_CONSTRAINT ( bl() >= MIN_BL );
+    SCV_CONSTRAINT ( bl() <= MAX_BL );
+    SCV_CONSTRAINT ( bl() != NO_VALID_BL1 );
+    SCV_CONSTRAINT ( bl() != NO_VALID_BL2 );
+    SCV_CONSTRAINT ( bl() != NO_VALID_BL3 );
+    SCV_CONSTRAINT ( bl() != NO_VALID_BL4 );
   }
 };
 
@@ -391,7 +397,7 @@ SC_MODULE (sc_tb) {
   SC_CTOR(sc_tb) {
     intf  = new interface("intf");
     // test1 = new base_test("test1",intf);
-    // test2 = new basic_func("test2",intf);
+    test2 = new basic_func("test2",intf);
     // test3 = new rd_after_rst("test3",intf);
     // test4 = new overwrite("test4",intf);
     // test5 = new cross_over("test5",intf);

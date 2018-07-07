@@ -23,24 +23,24 @@ void driver::init(unsigned long long seed) {
     driver::config();
     sig_gen->init(seed);
 
-    intf_int->wb_addr_i      = 0;
-    intf_int->wb_dat_i       = 0;
-    intf_int->wb_sel_i       = 0x0;
-    intf_int->wb_we_i        = false;
-    intf_int->wb_stb_i       = 0;
-    intf_int->wb_cyc_i       = 0;
-    intf_int->wb_rst_i       = 0;
-    intf_int->sdram_resetn   = 1;
-    //intf_int->sdram_wr_en_n  = 0xf;
-    intf_int->errCnt         = 0;
-    wait(10);
-
     // Reset
     reset();
 }
 
 // ************** DRIVER RESET **************** //
 void driver::reset() {
+  //Clean some signals
+  intf_int->wb_addr_i      = 0;
+  intf_int->wb_dat_i       = 0;
+  intf_int->wb_sel_i       = 0x0;
+  intf_int->wb_we_i        = false;
+  intf_int->wb_stb_i       = 0;
+  intf_int->wb_cyc_i       = 0;
+  intf_int->wb_rst_i       = 0;
+  intf_int->sdram_resetn   = 1;
+  intf_int->errCnt         = 0;
+  wait(10);
+
   // Applying reset
   intf_int->wb_rst_i       = 1;
   intf_int->sdram_resetn   = 0;
@@ -126,7 +126,7 @@ void driver::rnd_write() {
     intf_int->wb_addr_i <<", Write Data: "<< intf_int->wb_dat_i << endl;
   }
 
-  wait(1);
+  wait(10);
 
   intf_int->wb_stb_i        = false;
   intf_int->wb_cyc_i        = false;
@@ -185,6 +185,12 @@ void driver::seq_read() {
     intf_int->wb_we_i         = false;
     intf_int->wb_addr_i       = (address >> 2) + j; // Address[31:2]+j;
 
+    wait(1);
+    while(intf_int->wb_ack_o == 0b0) {
+        wait(1);
+    }
+
+    // It is neccesary to do this 2 times due to systemC sync problems
     wait(1);
     while(intf_int->wb_ack_o == 0b0) {
         wait(1);
@@ -268,9 +274,6 @@ void checker::verify(int mnt_value, string pass_msg){
   void basic_func::test() {
     intf_int->done = 0;
 
-    sc_uint<32> addr = 0x0;
-    sc_uint<4>  bl   = 0x0;
-    sc_uint<32> data = 0x0;
     sc_uint<4>  cyc  = 0x0;
 
     // Initialization
@@ -280,13 +283,12 @@ void checker::verify(int mnt_value, string pass_msg){
     wait(cyc);
 
     // Write
-    env->drv->write(0x40000, 1,  8);
+    env->drv->rnd_write();
     cyc = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
     // Read
-    //env->drv->seq_read();
-    env->drv->read(0x40000, 1);
+    env->drv->seq_read();
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 

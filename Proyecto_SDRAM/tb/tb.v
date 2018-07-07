@@ -119,17 +119,45 @@ sdrc_top #(.SDR_DW(`SDR_DW),.SDR_BW(`SDR_BW),.dw(`dw),.APP_AW(`APP_AW))
   // BFM
   wire #(2.0) sdram_clk_d   = sdram_clk;
 
-  mt48lc8m8a2 #(.data_bits(8)) u_sdram8 (
-            .Dq                 (sdr_dq             ),
-            .Addr               (sdr_addr[11:0]     ),
-            .Ba                 (sdr_ba             ),
-            .Clk                (sdram_clk_d        ),
-            .Cke                (sdr_cke            ),
-            .Cs_n               (sdr_cs_n           ),
-            .Ras_n              (sdr_ras_n          ),
-            .Cas_n              (sdr_cas_n          ),
-            .We_n               (sdr_we_n           ),
-            .Dqm                (sdr_dqm            )
-       );
+  `ifdef SDR_32BIT
+  mt48lc2m32b2 #(.data_bits(`SDR_DW)) u_sdram32 (
+    .Dq                 (sdr_dq             ),
+    .Addr               (sdr_addr[10:0]     ),
+    .Ba                 (sdr_ba             ),
+    .Clk                (sdram_clk_d        ),
+    .Cke                (sdr_cke            ),
+    .Cs_n               (sdr_cs_n           ),
+    .Ras_n              (sdr_ras_n          ),
+    .Cas_n              (sdr_cas_n          ),
+    .We_n               (sdr_we_n           ),
+    .Dqm                (sdr_dqm            )
+  );
+  `elsif SDR_16BIT
+  IS42VM16400K u_sdram16 (
+    .dq                 (sdr_dq             ),
+    .addr               (sdr_addr[11:0]     ),
+    .ba                 (sdr_ba             ),
+    .clk                (sdram_clk_d        ),
+    .cke                (sdr_cke            ),
+    .csb                (sdr_cs_n           ),
+    .rasb               (sdr_ras_n          ),
+    .casb               (sdr_cas_n          ),
+    .web                (sdr_we_n           ),
+    .dqm                (sdr_dqm            )
+  );
+  `else
+  mt48lc8m8a2 #(.data_bits(`SDR_DW)) u_sdram8 (
+    .Addr               (sdr_addr[11:0]     ),
+    .Dq                 (sdr_dq             ),
+    .Ba                 (sdr_ba             ),
+    .Clk                (sdram_clk_d        ),
+    .Cke                (sdr_cke            ),
+    .Cs_n               (sdr_cs_n           ),
+    .Ras_n              (sdr_ras_n          ),
+    .Cas_n              (sdr_cas_n          ),
+    .We_n               (sdr_we_n           ),
+    .Dqm                (sdr_dqm            )
+  );
+  `endif
 
 endmodule

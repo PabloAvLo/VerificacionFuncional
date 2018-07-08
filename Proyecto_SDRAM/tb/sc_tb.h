@@ -67,6 +67,30 @@ SC_MODULE (interface) {
   SC_CTOR(interface){}
 };
 
+// ************ FUNCTIONAL COVERAGE *********** //
+SC_MODULE (functional_cov) {
+
+  interface *intf_int;
+  int bank0;
+  int bank1;
+  int bank2;
+  int bank3;
+
+  SC_HAS_PROCESS(functional_cov);
+  functional_cov(sc_module_name cov, interface *intf_ext) {
+
+    //Interface
+    intf_int = intf_ext;
+
+    SC_THREAD(funct_cov)
+      sensitive<<intf_ext->wb_cyc_i.pos();
+  }
+
+  void init();
+  void funct_cov();
+  void print_cov();
+};
+
 
 // **************** SCOREBOARD *************** //
 SC_MODULE (scoreboard) {
@@ -258,19 +282,22 @@ SC_MODULE (environment) {
   scoreboard *scb;
   interface *intf_int;
   checker *check;
+  functional_cov *cov;
 
   SC_HAS_PROCESS(environment);
   environment(sc_module_name environment, interface *intf_ext) {
 
     intf_int = intf_ext;
-    //Scoreboard
+    // Scoreboard
     scb = new scoreboard("scb");
-    //Driver
+    // Driver
     drv = new driver("drv",scb,intf_ext);
-    //Monitor
+    // Monitor
     mnt = new monitor("mnt",intf_ext);
-    //Checker
+    // Checker
     check = new checker("check",scb,mnt,intf_ext);
+    // Functional Coverage
+    cov = new functional_cov("cov",intf_ext);
 
   }
 };
@@ -395,6 +422,26 @@ SC_MODULE (rnd_wr_rd) {
   }
 };
 
+// ******** USAGE OF 4 BANKS ********* //
+SC_MODULE (usg_4_banks) {
+
+  interface *intf_int;
+  environment *env;
+  string name;
+
+  void test ();
+
+  SC_HAS_PROCESS(usg_4_banks);
+  usg_4_banks(sc_module_name usg_4_banks, interface *intf_ext) {
+    intf_int = intf_ext;
+    //environment
+    name = "USAGE OF 4 BANKS";
+    env = new environment("env",intf_ext);
+    SC_CTHREAD(test,intf_ext->wb_clk_i.pos());
+
+  }
+};
+
 // *********** SYSTEM C TEST BENCH ************ //
 SC_MODULE (sc_tb) {
 
@@ -404,16 +451,18 @@ SC_MODULE (sc_tb) {
   overwrite     *test4;
   cross_over    *test5;
   rnd_wr_rd     *test6;
+  usg_4_banks   *test7;
   interface     *intf;
 
   SC_CTOR(sc_tb) {
     intf  = new interface("intf");
     // test1 = new base_test("test1",intf);
-     test2 = new basic_func("test2",intf);
+    // test2 = new basic_func("test2",intf);
     // test3 = new rd_after_rst("test3",intf);
     // test4 = new overwrite("test4",intf);
     // test5 = new cross_over("test5",intf);
     // test6 = new rnd_wr_rd("test6",intf);
+    test7 = new usg_4_banks("test7",intf);
   }
 };
 

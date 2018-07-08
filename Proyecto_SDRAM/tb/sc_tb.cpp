@@ -23,22 +23,23 @@ void driver::init(unsigned long long seed) {
     driver::config();
     sig_gen->init(seed);
 
+    //Clean some signals
+    intf_int->wb_addr_i      = 0;
+    intf_int->wb_dat_i       = 0;
+    intf_int->wb_sel_i       = 0x0;
+    intf_int->wb_we_i        = false;
+    intf_int->wb_stb_i       = 0;
+    intf_int->wb_cyc_i       = 0;
+    intf_int->wb_rst_i       = 0;
+    intf_int->sdram_resetn   = 1;
+    intf_int->errCnt         = 0;
+
     // Reset
     reset();
 }
 
 // ************** DRIVER RESET **************** //
 void driver::reset() {
-  //Clean some signals
-  intf_int->wb_addr_i      = 0;
-  intf_int->wb_dat_i       = 0;
-  intf_int->wb_sel_i       = 0x0;
-  intf_int->wb_we_i        = false;
-  intf_int->wb_stb_i       = 0;
-  intf_int->wb_cyc_i       = 0;
-  intf_int->wb_rst_i       = 0;
-  intf_int->sdram_resetn   = 1;
-  intf_int->errCnt         = 0;
   wait(10);
 
   // Applying reset
@@ -241,6 +242,49 @@ void checker::verify(int mnt_value, string pass_msg){
       }
 
   }*/
+}
+
+// ************ FUNCTIONAL COVERAGE ************ //
+void functional_cov::funct_cov(){
+  while(true){
+    wait(1);
+    cout << "oli: wb_addr_i = " << hex << intf_int->wb_addr_i << "y esto no funca porque " << endl;
+    if (((sc_uint<26>)intf_int->wb_addr_i & (sc_uint<26>)0x0000300)>>8 == 0) {
+      bank0++;
+      cout<<"@"<<sc_time_stamp()<<" Read/Write in bank 1" << endl;
+    }
+    else if (((sc_uint<26>)intf_int->wb_addr_i & (sc_uint<26>)0x0000300)>>8 == 1) {
+      bank1++;
+      cout<<"@"<<sc_time_stamp()<<" Read/Write in bank 2" << endl;
+    }
+    else if (((sc_uint<26>)intf_int->wb_addr_i & (sc_uint<26>)0x0000300)>>8 == 2) {
+      bank2++;
+      cout<<"@"<<sc_time_stamp()<<" Read/Write in bank 3" << endl;
+    }
+    else if (((sc_uint<26>)intf_int->wb_addr_i & (sc_uint<26>)0x0000300)>>8 == 3) {
+      bank3++;
+      cout<<"@"<<sc_time_stamp()<<" Read/Write in bank 4" << endl;
+    }
+  }
+}
+
+// ********* PRINT COVERAGE INFO ********* //
+void functional_cov::print_cov(){
+
+  cout<<"Functional Coverage Results: "<< endl;
+  cout<<"Event: reads/writes in bank 0 = " <<  bank0 << endl;
+  cout<<"Event: reads/writes in bank 1 = " <<  bank1 << endl;
+  cout<<"Event: reads/writes in bank 2 = " <<  bank2 << endl;
+  cout<<"Event: reads/writes in bank 3 = " <<  bank3 << endl;
+}
+
+// ********* PRINT COVERAGE INFO ********* //
+void functional_cov::init(){
+
+  bank0 = 0;
+  bank1 = 0;
+  bank2 = 0;
+  bank3 = 0;
 }
 
 
@@ -498,6 +542,55 @@ void checker::verify(int mnt_value, string pass_msg){
     cout << "=======================================" << endl;
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
+    intf_int->done = 1;
+    // Just wait for few cycles
+  }
+
+// ********** USAGE OF 4 BANKS ************ //
+// Stimulates all SDRAM banks
+  void usg_4_banks::test() {
+    intf_int->done = 0;
+
+    sc_uint<32> addr = 0x0;
+    sc_uint<4>  bl   = 0x0;
+    sc_uint<32> data = 0x0;
+    sc_uint<4>  cyc  = 0x0;
+
+    // Initialization
+    env->scb->n_cases = 4; // Max number of r/w to do
+    unsigned long long seed =  scv_random::pick_random_seed();
+    cout << "=======================================" << endl;
+    cout<<"TEST: "<< name << endl;
+    cout<<"SEED: "<< cout.precision(30) << seed << endl;
+    cout << "=======================================" << endl;
+    env->drv->init(seed);
+    env->cov->init();
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Writes data in 4 banks
+    env->drv->write(0x000000, 0x4, env->drv->sig_gen->data_rnd_gen()); // bank 0
+    env->drv->write(0x001400, 0x4, env->drv->sig_gen->data_rnd_gen()); // bank 1
+    env->drv->write(0x002800, 0x4, env->drv->sig_gen->data_rnd_gen()); // bank 2
+    env->drv->write(0x003C00, 0x4, env->drv->sig_gen->data_rnd_gen()); // bank 3
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Reads data
+    env->drv->read(0x000000, 0x4);
+    env->drv->read(0x001400, 0x4);
+    env->drv->read(0x002800, 0x4);
+    env->drv->read(0x003C00, 0x4);
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+
+    // Request for simulation termination
+    cout << "=======================================" << endl;
+    cout << " SIMULATION END" << endl;
+    cout << "=======================================" << endl;
+    cyc  = env->drv->sig_gen->wait_rnd_gen();
+    wait(cyc);
+    env->cov->print_cov();
     intf_int->done = 1;
     // Just wait for few cycles
   }

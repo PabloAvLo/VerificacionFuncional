@@ -54,8 +54,6 @@ void driver::reset() {
   while(intf_int->sdr_init_done == 0) {
       wait(1);
   }
-
-  cout<<"SDRAM is ready!"<<endl;
   wait(100);
 }
 
@@ -212,7 +210,22 @@ void monitor::mnt_out(){
 
   // wb_dat_i, wb_dat_o, wb_addr_i, wb_ack_o,
   // sdr_addr, sdr_dq, app_req*, sdr_dout* (sdr_dq), sdr_den_n*,
-  cout<<"@"<<sc_time_stamp()<<" Monitor data_out:" << intf_int->wb_dat_o << endl;
+
+  if(intf_int->sdr_init_done && !initFlag){
+    cout<<"@"<<sc_time_stamp()<<" MONITOR: Ready Flag" << intf_int->sdr_init_done << endl;
+    initFlag = 1;
+  }
+  else if(!(intf_int->sdr_init_done) && initFlag){
+    initFlag = 0;
+  }
+
+  if ((intf_int->sdr_cas_n==0) && (intf_int->sdr_ras_n==0) && (intf_int->sdr_we_n==1)){
+    cout<<"@"<<sc_time_stamp()<<" MONITOR: AUTOREFRESH Done"<< endl;
+    AutoRef_counter +=1;
+  }
+  if(intf_int->done){
+    cout<<"AUTOREFRESH Counter: "<<AutoRef_counter<<endl;
+  }
 }
 
 // **************** CHECKER **************** //

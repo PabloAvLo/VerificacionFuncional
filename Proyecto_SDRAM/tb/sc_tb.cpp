@@ -219,12 +219,35 @@ void monitor::mnt_out(){
     initFlag = 0;
   }
 
-  if ((intf_int->sdr_cas_n==0) && (intf_int->sdr_ras_n==0) && (intf_int->sdr_we_n==1)){
+  if (!intf_int->sdr_ras_n && !intf_int->sdr_cas_n && intf_int->sdr_we_n){
     cout<<"@"<<sc_time_stamp()<<" MONITOR: AUTOREFRESH Done"<< endl;
     AutoRef_counter +=1;
   }
+  if (intf_int->sdr_ras_n && !intf_int->sdr_cas_n && intf_int->sdr_we_n && !readFlag){
+    cout<<"@"<<sc_time_stamp()<<" MONITOR: READ Done"<< endl;
+    readCounter +=1;
+    readFlag = 1;
+  }
+  else if(!(intf_int->sdr_we_n) && readFlag){
+    readFlag = 0;
+  }
+
+  if (intf_int->sdr_ras_n && !intf_int->sdr_cas_n && !intf_int->sdr_we_n  && !writeFlag){
+    cout<<"@"<<sc_time_stamp()<<" MONITOR: WRITE Done"<< endl;
+    writeCounter +=1;
+    writeFlag = 1;
+  }
+  else if(intf_int->sdr_we_n && writeFlag){
+    writeFlag = 0;
+  }
+
+
   if(intf_int->done){
+    cout <<endl<< "////////////// FUNCTIONAL COVERAGE //////////////" << endl;
     cout<<"AUTOREFRESH Counter: "<<AutoRef_counter<<endl;
+    cout<<"READ Counter: "<<readCounter<<endl;
+    cout<<"WRITE Counter: "<<writeCounter<<endl;
+    cout<< "/////////////////////////////////////////////////" << endl << endl;
   }
 }
 

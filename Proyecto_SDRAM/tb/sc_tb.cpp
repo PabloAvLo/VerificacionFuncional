@@ -213,7 +213,7 @@ void monitor::mnt_out(){
   // sdr_addr, sdr_dq, app_req*, sdr_dout* (sdr_dq), sdr_den_n*,
 
   if(intf_int->sdr_init_done && !initFlag){
-    cout<<"@"<<sc_time_stamp()<<" MONITOR: Ready Flag" << intf_int->sdr_init_done << endl;
+    cout<<"@"<<sc_time_stamp()<<" MONITOR: READY FLAG" << intf_int->sdr_init_done << endl;
     initFlag = 1;
   }
   else if(!(intf_int->sdr_init_done) && initFlag){
@@ -221,11 +221,11 @@ void monitor::mnt_out(){
   }
 
   if (!intf_int->sdr_ras_n && !intf_int->sdr_cas_n && intf_int->sdr_we_n){
-    cout<<"@"<<sc_time_stamp()<<" MONITOR: AUTOREFRESH Done"<< endl;
+    cout<<"@"<<sc_time_stamp()<<" MONITOR: AUTOREFRESH DONE"<< endl;
     AutoRef_counter +=1;
   }
   if (intf_int->sdr_ras_n && !intf_int->sdr_cas_n && intf_int->sdr_we_n && !readFlag){
-    cout<<"@"<<sc_time_stamp()<<" MONITOR: READ Done"<< endl;
+    cout<<"@"<<sc_time_stamp()<<" MONITOR: SDRAM READ DONE"<< endl;
     readCounter +=1;
     readFlag = 1;
   }
@@ -234,7 +234,7 @@ void monitor::mnt_out(){
   }
 
   if (intf_int->sdr_ras_n && !intf_int->sdr_cas_n && !intf_int->sdr_we_n  && !writeFlag){
-    cout<<"@"<<sc_time_stamp()<<" MONITOR: WRITE Done"<< endl;
+    cout<<"@"<<sc_time_stamp()<<" MONITOR: SDRAM WRITE DONE"<< endl;
     writeCounter +=1;
     writeFlag = 1;
   }
@@ -284,7 +284,6 @@ void checker::verify(int mnt_value, string pass_msg){
 void functional_cov::funct_cov(){
   while(true){
     wait(1);
-    cout << "oli: wb_addr_i = " << hex << intf_int->wb_addr_i << "y esto no funca porque " << endl;
     if (((sc_uint<26>)intf_int->wb_addr_i & (sc_uint<26>)0x0000300)>>8 == 0) {
       bank0++;
       cout<<"@"<<sc_time_stamp()<<" Read/Write in bank 1" << endl;

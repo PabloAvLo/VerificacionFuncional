@@ -255,7 +255,11 @@ void checker::verify(int mnt_value, string pass_msg){
     sc_uint<4>  cyc  = 0x0;
 
     // Initialization
-    env->drv->init(scv_random::pick_random_seed());
+    float seed =  scv_random::pick_random_seed();
+    cout << "=======================================" << endl;
+    cout<<"SEED OF TEST: "<< cout.precision(30) << seed << endl;
+    cout << "=======================================" << endl;
+    env->drv->init(seed);
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
@@ -278,7 +282,12 @@ void checker::verify(int mnt_value, string pass_msg){
 
     // Initialization
     env->scb->n_cases = 1; // Max number of r/w to do
-    env->drv->init(scv_random::pick_random_seed());
+    float seed =  scv_random::pick_random_seed();
+    cout << "=======================================" << endl;
+    cout<<"TEST: "<< name << endl;
+    cout<<"SEED: "<< cout.precision(30) << seed << endl;
+    cout << "=======================================" << endl;
+    env->drv->init(seed);
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
@@ -314,7 +323,11 @@ void checker::verify(int mnt_value, string pass_msg){
 
     // Initialization
     env->scb->n_cases = 1; // Max number of r/w to do
-    env->drv->init(scv_random::pick_random_seed());
+    float seed =  scv_random::pick_random_seed();
+    cout << "=======================================" << endl;
+    cout<<"SEED OF TEST: "<< cout.precision(30) << seed << endl;
+    cout << "=======================================" << endl;
+    env->drv->init(seed);
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
@@ -360,7 +373,11 @@ void checker::verify(int mnt_value, string pass_msg){
 
     // Initialization
     env->scb->n_cases = 1; // Max number of r/w to do
-    env->drv->init(scv_random::pick_random_seed());
+    float seed =  scv_random::pick_random_seed();
+    cout << "=======================================" << endl;
+    cout<<"SEED OF TEST: "<< cout.precision(30) << seed << endl;
+    cout << "=======================================" << endl;
+    env->drv->init(seed);
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
@@ -406,7 +423,11 @@ void checker::verify(int mnt_value, string pass_msg){
 
     // Initialization
     env->scb->n_cases = 24; // Max number of r/w to do
-    env->drv->init(scv_random::pick_random_seed());
+    float seed =  scv_random::pick_random_seed();
+    cout << "=======================================" << endl;
+    cout<<"SEED OF TEST: "<< cout.precision(30) << seed << endl;
+    cout << "=======================================" << endl;
+    env->drv->init(seed);
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 

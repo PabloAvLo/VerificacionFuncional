@@ -280,6 +280,7 @@ SC_MODULE (base_test) {
 
   interface *intf_int;
   environment *env;
+  string name;
 
   void test ();
 
@@ -287,6 +288,7 @@ SC_MODULE (base_test) {
   base_test(sc_module_name base_test, interface *intf_ext) {
     intf_int = intf_ext;
     //environment
+    name = "BASE TEST";
     env = new environment("env",intf_ext);
     SC_CTHREAD(test,intf_ext->wb_clk_i.pos());
 
@@ -298,6 +300,7 @@ SC_MODULE (basic_func) {
 
   interface *intf_int;
   environment *env;
+  string name;
 
   void test ();
 
@@ -305,6 +308,7 @@ SC_MODULE (basic_func) {
   basic_func(sc_module_name basic_func, interface *intf_ext) {
     intf_int = intf_ext;
     //environment
+    name = "BASIC FUNCTIONALITY";
     env = new environment("env",intf_ext);
     SC_CTHREAD(test,intf_ext->wb_clk_i.pos());
 
@@ -316,6 +320,7 @@ SC_MODULE (rd_after_rst) {
 
   interface *intf_int;
   environment *env;
+  string name;
 
   void test ();
 
@@ -323,6 +328,7 @@ SC_MODULE (rd_after_rst) {
   rd_after_rst(sc_module_name rd_after_rst, interface *intf_ext) {
     intf_int = intf_ext;
     //environment
+    name = "READ AFTER RESET";
     env = new environment("env",intf_ext);
     SC_CTHREAD(test,intf_ext->wb_clk_i.pos());
 
@@ -334,6 +340,7 @@ SC_MODULE (overwrite) {
 
   interface *intf_int;
   environment *env;
+  string name;
 
   void test ();
 
@@ -341,17 +348,19 @@ SC_MODULE (overwrite) {
   overwrite(sc_module_name overwrite, interface *intf_ext) {
     intf_int = intf_ext;
     //environment
+    name = "OVERWRITE DATA";
     env = new environment("env",intf_ext);
     SC_CTHREAD(test,intf_ext->wb_clk_i.pos());
 
   }
 };
 
-// ************* CROSS OVER *************** //
+// ************* CROSSOVER *************** //
 SC_MODULE (cross_over) {
 
   interface *intf_int;
   environment *env;
+  string name;
 
   void test ();
 
@@ -359,6 +368,7 @@ SC_MODULE (cross_over) {
   cross_over(sc_module_name cross_over, interface *intf_ext) {
     intf_int = intf_ext;
     //environment
+    name = "CROSSOVER";
     env = new environment("env",intf_ext);
     SC_CTHREAD(test,intf_ext->wb_clk_i.pos());
 
@@ -370,6 +380,7 @@ SC_MODULE (rnd_wr_rd) {
 
   interface *intf_int;
   environment *env;
+  string name;
 
   void test ();
 
@@ -377,6 +388,7 @@ SC_MODULE (rnd_wr_rd) {
   rnd_wr_rd(sc_module_name rnd_wr_rd, interface *intf_ext) {
     intf_int = intf_ext;
     //environment
+    name = "RANDOM WRITE/READ";
     env = new environment("env",intf_ext);
     SC_CTHREAD(test,intf_ext->wb_clk_i.pos());
 
@@ -397,7 +409,7 @@ SC_MODULE (sc_tb) {
   SC_CTOR(sc_tb) {
     intf  = new interface("intf");
     // test1 = new base_test("test1",intf);
-    test2 = new basic_func("test2",intf);
+     test2 = new basic_func("test2",intf);
     // test3 = new rd_after_rst("test3",intf);
     // test4 = new overwrite("test4",intf);
     // test5 = new cross_over("test5",intf);

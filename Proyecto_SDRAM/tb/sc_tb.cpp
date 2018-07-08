@@ -55,8 +55,6 @@ void driver::reset() {
   while(intf_int->sdr_init_done == 0) {
       wait(1);
   }
-
-  cout<<"SDRAM is ready!"<<endl;
   wait(100);
 }
 
@@ -213,7 +211,45 @@ void monitor::mnt_out(){
 
   // wb_dat_i, wb_dat_o, wb_addr_i, wb_ack_o,
   // sdr_addr, sdr_dq, app_req*, sdr_dout* (sdr_dq), sdr_den_n*,
-  cout<<"@"<<sc_time_stamp()<<" Monitor data_out:" << intf_int->wb_dat_o << endl;
+
+  if(intf_int->sdr_init_done && !initFlag){
+    cout<<"@"<<sc_time_stamp()<<" MONITOR: Ready Flag" << intf_int->sdr_init_done << endl;
+    initFlag = 1;
+  }
+  else if(!(intf_int->sdr_init_done) && initFlag){
+    initFlag = 0;
+  }
+
+  if (!intf_int->sdr_ras_n && !intf_int->sdr_cas_n && intf_int->sdr_we_n){
+    cout<<"@"<<sc_time_stamp()<<" MONITOR: AUTOREFRESH Done"<< endl;
+    AutoRef_counter +=1;
+  }
+  if (intf_int->sdr_ras_n && !intf_int->sdr_cas_n && intf_int->sdr_we_n && !readFlag){
+    cout<<"@"<<sc_time_stamp()<<" MONITOR: READ Done"<< endl;
+    readCounter +=1;
+    readFlag = 1;
+  }
+  else if(!(intf_int->sdr_we_n) && readFlag){
+    readFlag = 0;
+  }
+
+  if (intf_int->sdr_ras_n && !intf_int->sdr_cas_n && !intf_int->sdr_we_n  && !writeFlag){
+    cout<<"@"<<sc_time_stamp()<<" MONITOR: WRITE Done"<< endl;
+    writeCounter +=1;
+    writeFlag = 1;
+  }
+  else if(intf_int->sdr_we_n && writeFlag){
+    writeFlag = 0;
+  }
+
+
+  if(intf_int->done){
+    cout <<endl<< "////////////// FUNCTIONAL COVERAGE //////////////" << endl;
+    cout<<"AUTOREFRESH Counter: "<<AutoRef_counter<<endl;
+    cout<<"READ Counter: "<<readCounter<<endl;
+    cout<<"WRITE Counter: "<<writeCounter<<endl;
+    cout<< "/////////////////////////////////////////////////" << endl << endl;
+  }
 }
 
 // **************** CHECKER **************** //

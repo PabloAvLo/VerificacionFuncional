@@ -239,17 +239,31 @@ SC_MODULE (monitor) {
 
   sc_uint<8> data_out_exp;
   sc_uint<8> data_out_read;
+  bool initFlag;
+  bool readFlag;
+  bool writeFlag;
+  int AutoRef_counter;
+  int readCounter;
+  int writeCounter;
+
 
   SC_HAS_PROCESS(monitor);
   monitor(sc_module_name monitor, interface *intf_ext) {
     //Interface
-    intf_int=intf_ext;
-    SC_THREAD(mnt_out);
-    //sensitive << intf_int->rd_en.pos();
+    intf_int = intf_ext;
+    AutoRef_counter = 0;
+    readCounter     = 0;
+    writeCounter    = 0;
+    initFlag        = 0;
+    readFlag        = 0;
+    writeFlag       = 0;
+
+    SC_METHOD(mnt_out);
+    sensitive << intf_int->sdr_init_done.pos();
+    sensitive << intf_int->wb_clk_i.pos();
+    sensitive << intf_int->done.pos();
   }
-
   void mnt_out();
-
 };
 
 // **************** CHECKER **************** //

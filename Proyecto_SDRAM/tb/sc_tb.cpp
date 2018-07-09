@@ -280,8 +280,8 @@ void checker::verify(int mnt_value, string pass_msg){
   }*/
 }
 
-// ************ FUNCTIONAL COVERAGE ************ //
-void functional_cov::funct_cov(){
+// ************ BANK COVERAGE ************ //
+void functional_cov::bank_cov(){
   while(true){
     wait(1);
     if (((sc_uint<26>)intf_int->wb_addr_i & (sc_uint<26>)0x0000300)>>8 == 0) {
@@ -303,6 +303,14 @@ void functional_cov::funct_cov(){
   }
 }
 
+// ************ RESET COVERAGE ************ //
+void functional_cov::rst_cov(){
+  while(true){
+    wait(1);
+    rst_cnt++;
+  }
+}
+
 // ********* PRINT COVERAGE INFO ********* //
 void functional_cov::print_cov(){
 
@@ -311,15 +319,7 @@ void functional_cov::print_cov(){
   cout<<"Event: reads/writes in bank 1 = " <<  bank1 << endl;
   cout<<"Event: reads/writes in bank 2 = " <<  bank2 << endl;
   cout<<"Event: reads/writes in bank 3 = " <<  bank3 << endl;
-}
-
-// ********* PRINT COVERAGE INFO ********* //
-void functional_cov::init(){
-
-  bank0 = 0;
-  bank1 = 0;
-  bank2 = 0;
-  bank3 = 0;
+  cout<<"Event: reset count = " <<  rst_cnt << endl;
 }
 
 
@@ -349,6 +349,7 @@ void functional_cov::init(){
     cout << "=======================================" << endl;
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
+    env->cov->print_cov();
     intf_int->done = 1;
     // Just wait for few cycles
   }
@@ -388,6 +389,7 @@ void functional_cov::init(){
     cout << "=======================================" << endl;
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
+    env->cov->print_cov();
     intf_int->done = 1;
     // Just wait for few cycles
   }
@@ -439,6 +441,7 @@ void functional_cov::init(){
     cout << "=======================================" << endl;
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
+    env->cov->print_cov();
     intf_int->done = 1;
     // Just wait for few cycles
   }
@@ -490,6 +493,7 @@ void functional_cov::init(){
     cout << "=======================================" << endl;
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
+    env->cov->print_cov();
     intf_int->done = 1;
     // Just wait for few cycles
   }
@@ -577,6 +581,7 @@ void functional_cov::init(){
     cout << "=======================================" << endl;
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
+    env->cov->print_cov();
     intf_int->done = 1;
     // Just wait for few cycles
   }
@@ -599,7 +604,6 @@ void functional_cov::init(){
     cout<<"SEED: "<< cout.precision(30) << seed << endl;
     cout << "=======================================" << endl;
     env->drv->init(seed);
-    env->cov->init();
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 

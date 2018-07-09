@@ -75,20 +75,30 @@ SC_MODULE (functional_cov) {
   int bank1;
   int bank2;
   int bank3;
+  int rst_cnt;
 
   SC_HAS_PROCESS(functional_cov);
   functional_cov(sc_module_name cov, interface *intf_ext) {
 
+    bank0 = 0;
+    bank1 = 0;
+    bank2 = 0;
+    bank3 = 0;
+    rst_cnt = 0;
+
     //Interface
     intf_int = intf_ext;
 
-    SC_THREAD(funct_cov)
+    SC_THREAD(bank_cov)
       sensitive<<intf_ext->wb_cyc_i.pos();
+
+    SC_THREAD(rst_cov)
+      sensitive<<intf_ext->wb_rst_i.pos();
   }
 
-  void init();
-  void funct_cov();
+  void bank_cov();
   void print_cov();
+  void rst_cov();
 };
 
 
@@ -472,11 +482,11 @@ SC_MODULE (sc_tb) {
     intf  = new interface("intf");
     // test1 = new base_test("test1",intf);
     // test2 = new basic_func("test2",intf);
-    // test3 = new rd_after_rst("test3",intf);
+    test3 = new rd_after_rst("test3",intf);
     // test4 = new overwrite("test4",intf);
     // test5 = new cross_over("test5",intf);
     // test6 = new rnd_wr_rd("test6",intf);
-    test7 = new usg_4_banks("test7",intf);
+    // test7 = new usg_4_banks("test7",intf);
   }
 };
 

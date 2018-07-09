@@ -160,6 +160,8 @@ void driver::read(sc_uint<32> address, sc_uint<8> burstLenght) {
 
     cout<<"@"<<sc_time_stamp()<<"Burst-No: "<< j <<", Read Address: "<<
     intf_int->wb_addr_i <<", Read Data: "<< intf_int->wb_dat_o << endl;
+    //check->verify(0, address);
+    //check->verify(1, intf_int->wb_dat_o);
     wait(5, SC_NS);
   }
 
@@ -197,6 +199,7 @@ void driver::seq_read() {
 
     cout<<"@"<<sc_time_stamp()<<" Burst-No: "<< j <<", Read Address: "<<
     intf_int->wb_addr_i <<", Read Data: "<< intf_int->wb_dat_o << endl;
+    //check->verify(1,intf_int->wb_dat_o);
     wait(5, SC_NS);
   }
 
@@ -251,11 +254,21 @@ void monitor::mnt_out(){
 }
 
 // **************** CHECKER **************** //
-void checker::verify(int mnt_value, string pass_msg){
+/*
+type 0 : Address
+type 1 : Data
+*/
+void checker::verify(int type,sc_dt::sc_uint<32> mnt_value){
+  sc_dt::sc_uint<32> scb_value;
+  if(type == 0){
+    scb_value = scb_int->addr_fifo.read();
+  }
+  else if(type ==1){
+    scb_value = scb_int->data_fifo.read();
+  }
 
-  int scb_value =0; // scb->search();
   if(mnt_value == scb_value){
-    cout<< "PASS: "<<pass_msg <<endl;
+    cout<< "PASS: Monitor value "<< mnt_value << "matches with expected scoreboard value "<<scb_value <<endl;
   }
   else{
     cout<< "FAIL: Monitor value "<< mnt_value << "does not match with expected scoreboard value "<<scb_value <<endl;

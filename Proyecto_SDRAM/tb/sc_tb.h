@@ -115,9 +115,6 @@ SC_MODULE (scoreboard) {
     sc_fifo<sc_uint<8> > buLen_fifo (100); //n_cases);
     sc_fifo<sc_uint<32> > data_fifo (100); //n_cases);
   }
-
-  // Can search address, data and burstLenghts
-  int search(int value_to_search);
 };
 
 // ***************** CONSTRAINS ***************** //
@@ -217,30 +214,6 @@ SC_MODULE (signal_generator) {
   }
 };
 
-// **************** DRIVER **************** //
-SC_MODULE (driver) {
-
-  interface *intf_int;
-  scoreboard *scb_int;
-  signal_generator *sig_gen;
-
-  SC_HAS_PROCESS(driver);
-  driver(sc_module_name driver, scoreboard *scb_ext, interface *intf_ext) {
-
-    //Interface
-    intf_int = intf_ext;
-    //Scoreboard
-    scb_int = scb_ext;
-  }
-
-  void config();
-  void init(unsigned long long);
-  void reset();
-  void write(sc_uint<32> address, sc_uint<8> burstLenght, sc_uint<32> data);
-  void rnd_write();
-  void read(sc_uint<32> address, sc_uint<8> burstLenght);
-  void seq_read();
-};
 
 // **************** MONITOR **************** //
 SC_MODULE (monitor) {
@@ -293,10 +266,35 @@ SC_MODULE (checker) {
     mnt_int = mnt_ext;
   }
 
-  void verify(int mnt_value, string pass_msg);
+  void verify(int type,sc_dt::sc_uint<32> mnt_value);
 
 };
 
+// **************** DRIVER **************** //
+SC_MODULE (driver) {
+
+  interface *intf_int;
+  scoreboard *scb_int;
+  signal_generator *sig_gen;
+  checker *check;
+
+  SC_HAS_PROCESS(driver);
+  driver(sc_module_name driver, scoreboard *scb_ext, interface *intf_ext) {
+
+    //Interface
+    intf_int = intf_ext;
+    //Scoreboard
+    scb_int = scb_ext;
+  }
+
+  void config();
+  void init(unsigned long long);
+  void reset();
+  void write(sc_uint<32> address, sc_uint<8> burstLenght, sc_uint<32> data);
+  void rnd_write();
+  void read(sc_uint<32> address, sc_uint<8> burstLenght);
+  void seq_read();
+};
 
 // **************** ENVIROMENT **************** //
 SC_MODULE (environment) {
@@ -307,7 +305,6 @@ SC_MODULE (environment) {
   interface *intf_int;
   checker *check;
   functional_cov *cov;
-  int clockCounter;
 
   SC_HAS_PROCESS(environment);
   environment(sc_module_name environment, interface *intf_ext) {
@@ -315,17 +312,15 @@ SC_MODULE (environment) {
     intf_int = intf_ext;
     // Scoreboard
     scb = new scoreboard("scb");
-    // Driver
-    drv = new driver("drv",scb,intf_ext);
     // Monitor
     mnt = new monitor("mnt",intf_ext);
     // Checker
-    check = new checker("check",scb,mnt,intf_ext);
+    //check = new checker("check",scb,mnt,intf_ext);
+    // Driver
+    drv = new driver("drv",scb,intf_ext);
     // Functional Coverage
     cov = new functional_cov("cov",intf_ext);
 
-    // Init Clock Counter
-    clockCounter = 0;
   }
 };
 

@@ -307,6 +307,7 @@ SC_MODULE (environment) {
   interface *intf_int;
   checker *check;
   functional_cov *cov;
+  int clockCounter;
 
   SC_HAS_PROCESS(environment);
   environment(sc_module_name environment, interface *intf_ext) {
@@ -323,6 +324,8 @@ SC_MODULE (environment) {
     // Functional Coverage
     cov = new functional_cov("cov",intf_ext);
 
+    // Init Clock Counter
+    clockCounter = 0;
   }
 };
 
@@ -481,8 +484,8 @@ SC_MODULE (sc_tb) {
   SC_CTOR(sc_tb) {
     intf  = new interface("intf");
     // test1 = new base_test("test1",intf);
-    // test2 = new basic_func("test2",intf);
-    test3 = new rd_after_rst("test3",intf);
+    test2 = new basic_func("test2",intf);
+    // test3 = new rd_after_rst("test3",intf);
     // test4 = new overwrite("test4",intf);
     // test5 = new cross_over("test5",intf);
     // test6 = new rnd_wr_rd("test6",intf);

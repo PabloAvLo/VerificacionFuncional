@@ -366,8 +366,13 @@ void functional_cov::print_cov(){
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
+    sc_core::sc_time timeA = sc_time_stamp();
+    wait(1);
+    sc_core::sc_time timeB = sc_time_stamp();
+    sc_core::sc_time time_diff = (timeB - timeA);
     // Request for simulation termination
     cout << "=======================================" << endl;
+    //cout << " Clock Period = " << time_diff<<endl;
     cout << " SIMULATION END" << endl;
     cout << "=======================================" << endl;
     cyc  = env->drv->sig_gen->wait_rnd_gen();
@@ -376,6 +381,7 @@ void functional_cov::print_cov(){
     intf_int->done = 1;
     // Just wait for few cycles
   }
+
 
 // ********** READ AFTER RESET ************ //
 // Reads data after reset memory

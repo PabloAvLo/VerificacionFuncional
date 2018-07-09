@@ -242,13 +242,11 @@ void monitor::mnt_out(){
     writeFlag = 0;
   }
 
-
   if(intf_int->done){
-    cout <<endl<< "////////////// FUNCTIONAL COVERAGE //////////////" << endl;
-    cout<<"AUTOREFRESH Counter: "<<AutoRef_counter<<endl;
-    cout<<"READ Counter: "<<readCounter<<endl;
-    cout<<"WRITE Counter: "<<writeCounter<<endl;
-    cout<< "/////////////////////////////////////////////////" << endl << endl;
+    cout<<"Event: AutoRefresh            = "<<AutoRef_counter<<endl;
+    cout<<"Event: Read                   = "<<readCounter<<endl;
+    cout<<"Event: Write                  = "<<writeCounter<<endl;
+    cout<< "//////////////////////////////////////////////////////////" << endl << endl;
   }
 }
 
@@ -263,21 +261,6 @@ void checker::verify(int mnt_value, string pass_msg){
     cout<< "FAIL: Monitor value "<< mnt_value << "does not match with expected scoreboard value "<<scb_value <<endl;
     intf_int->errCnt += 1;
   }
-
-
-/*
-      // -------------------------- Checker
-      if(intf_int->wb_dat_o != expectedData) {
-        cout<<"READ ERROR: Burst-No: "<< j <<", Addr: "<< intf_int->wb_addr_i
-        <<" Rxp: " << intf_int->wb_dat_o <<", Exd: "<< expectedData << endl;
-
-        intf_int->errCnt += 1;
-      } else {
-        cout<<"READ STATUS: Burst-No: "<< j <<", Addr: "<< intf_int->wb_addr_i
-        <<" Rxp: " << intf_int->wb_dat_o << endl;
-      }
-
-  }*/
 }
 
 // ************ BANK COVERAGE ************ //
@@ -314,12 +297,12 @@ void functional_cov::rst_cov(){
 // ********* PRINT COVERAGE INFO ********* //
 void functional_cov::print_cov(){
 
-  cout<<"Functional Coverage Results: "<< endl;
+  cout <<endl<< "////////////// FUNCTIONAL COVERAGE RESULTS //////////////" << endl;
   cout<<"Event: reads/writes in bank 0 = " <<  bank0 << endl;
   cout<<"Event: reads/writes in bank 1 = " <<  bank1 << endl;
   cout<<"Event: reads/writes in bank 2 = " <<  bank2 << endl;
   cout<<"Event: reads/writes in bank 3 = " <<  bank3 << endl;
-  cout<<"Event: reset count = " <<  rst_cnt << endl;
+  cout<<"Event: reset count            = " <<  rst_cnt << endl;
 }
 
 

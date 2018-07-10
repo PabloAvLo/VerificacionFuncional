@@ -214,7 +214,7 @@ SC_MODULE (signal_generator) {
   }
 };
 
-<<<<<<< HEAD
+
 // **************** DRIVER **************** //
 SC_MODULE (driver) {
 
@@ -240,8 +240,7 @@ SC_MODULE (driver) {
   void seq_read();
   void toggle();
 };
-=======
->>>>>>> 117bf1d2ca3bc7f8b030a33d0acb036416220026
+
 
 // **************** MONITOR **************** //
 SC_MODULE (monitor) {
@@ -296,32 +295,6 @@ SC_MODULE (checker) {
 
   void verify(int type,sc_dt::sc_uint<32> mnt_value);
 
-};
-
-// **************** DRIVER **************** //
-SC_MODULE (driver) {
-
-  interface *intf_int;
-  scoreboard *scb_int;
-  signal_generator *sig_gen;
-  checker *check;
-
-  SC_HAS_PROCESS(driver);
-  driver(sc_module_name driver, scoreboard *scb_ext, interface *intf_ext) {
-
-    //Interface
-    intf_int = intf_ext;
-    //Scoreboard
-    scb_int = scb_ext;
-  }
-
-  void config();
-  void init(unsigned long long);
-  void reset();
-  void write(sc_uint<32> address, sc_uint<8> burstLenght, sc_uint<32> data);
-  void rnd_write();
-  void read(sc_uint<32> address, sc_uint<8> burstLenght);
-  void seq_read();
 };
 
 // **************** ENVIROMENT **************** //
@@ -528,11 +501,7 @@ SC_MODULE (sc_tb) {
   SC_CTOR(sc_tb) {
     intf  = new interface("intf");
     // test1 = new base_test("test1",intf);
-<<<<<<< HEAD
     // test2 = new basic_func("test2",intf);
-=======
-    test2 = new basic_func("test2",intf);
->>>>>>> 117bf1d2ca3bc7f8b030a33d0acb036416220026
     // test3 = new rd_after_rst("test3",intf);
     // test4 = new overwrite("test4",intf);
     // test5 = new cross_over("test5",intf);

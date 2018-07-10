@@ -192,6 +192,8 @@ void driver::read(sc_uint<32> address, sc_uint<8> burstLenght) {
 
     cout<<"@"<<sc_time_stamp()<<"Burst-No: "<< j <<", Read Address: "<<
     intf_int->wb_addr_i <<", Read Data: "<< intf_int->wb_dat_o << endl;
+    //check->verify(0, address);
+    //check->verify(1, intf_int->wb_dat_o);
     wait(5, SC_NS);
   }
 
@@ -229,6 +231,7 @@ void driver::seq_read() {
 
     cout<<"@"<<sc_time_stamp()<<" Burst-No: "<< j <<", Read Address: "<<
     intf_int->wb_addr_i <<", Read Data: "<< intf_int->wb_dat_o << endl;
+    //check->verify(1,intf_int->wb_dat_o);
     wait(5, SC_NS);
   }
 
@@ -274,42 +277,35 @@ void monitor::mnt_out(){
     writeFlag = 0;
   }
 
-
   if(intf_int->done){
-    cout <<endl<< "////////////// FUNCTIONAL COVERAGE //////////////" << endl;
-    cout<<"AUTOREFRESH Counter: "<<AutoRef_counter<<endl;
-    cout<<"READ Counter: "<<readCounter<<endl;
-    cout<<"WRITE Counter: "<<writeCounter<<endl;
-    cout<< "/////////////////////////////////////////////////" << endl << endl;
+    cout<<"Event: AutoRefresh            = "<<AutoRef_counter<<endl;
+    cout<<"Event: Read                   = "<<readCounter<<endl;
+    cout<<"Event: Write                  = "<<writeCounter<<endl;
+    cout<< "//////////////////////////////////////////////////////////" << endl << endl;
   }
 }
 
 // **************** CHECKER **************** //
-void checker::verify(int mnt_value, string pass_msg){
+/*
+type 0 : Address
+type 1 : Data
+*/
+void checker::verify(int type,sc_dt::sc_uint<32> mnt_value){
+  sc_dt::sc_uint<32> scb_value;
+  if(type == 0){
+    scb_value = scb_int->addr_fifo.read();
+  }
+  else if(type ==1){
+    scb_value = scb_int->data_fifo.read();
+  }
 
-  int scb_value =0; // scb->search();
   if(mnt_value == scb_value){
-    cout<< "PASS: "<<pass_msg <<endl;
+    cout<< "PASS: Monitor value "<< mnt_value << "matches with expected scoreboard value "<<scb_value <<endl;
   }
   else{
     cout<< "FAIL: Monitor value "<< mnt_value << "does not match with expected scoreboard value "<<scb_value <<endl;
     intf_int->errCnt += 1;
   }
-
-
-/*
-      // -------------------------- Checker
-      if(intf_int->wb_dat_o != expectedData) {
-        cout<<"READ ERROR: Burst-No: "<< j <<", Addr: "<< intf_int->wb_addr_i
-        <<" Rxp: " << intf_int->wb_dat_o <<", Exd: "<< expectedData << endl;
-
-        intf_int->errCnt += 1;
-      } else {
-        cout<<"READ STATUS: Burst-No: "<< j <<", Addr: "<< intf_int->wb_addr_i
-        <<" Rxp: " << intf_int->wb_dat_o << endl;
-      }
-
-  }*/
 }
 
 // ************ BANK COVERAGE ************ //
@@ -346,12 +342,12 @@ void functional_cov::rst_cov(){
 // ********* PRINT COVERAGE INFO ********* //
 void functional_cov::print_cov(){
 
-  cout<<"Functional Coverage Results: "<< endl;
+  cout <<endl<< "////////////// FUNCTIONAL COVERAGE RESULTS //////////////" << endl;
   cout<<"Event: reads/writes in bank 0 = " <<  bank0 << endl;
   cout<<"Event: reads/writes in bank 1 = " <<  bank1 << endl;
   cout<<"Event: reads/writes in bank 2 = " <<  bank2 << endl;
   cout<<"Event: reads/writes in bank 3 = " <<  bank3 << endl;
-  cout<<"Event: reset count = " <<  rst_cnt << endl;
+  cout<<"Event: reset count            = " <<  rst_cnt << endl;
 }
 
 
@@ -415,8 +411,13 @@ void functional_cov::print_cov(){
     cyc  = env->drv->sig_gen->wait_rnd_gen();
     wait(cyc);
 
+    sc_core::sc_time timeA = sc_time_stamp();
+    wait(1);
+    sc_core::sc_time timeB = sc_time_stamp();
+    sc_core::sc_time time_diff = (timeB - timeA);
     // Request for simulation termination
     cout << "=======================================" << endl;
+    //cout << " Clock Period = " << time_diff<<endl;
     cout << " SIMULATION END" << endl;
     cout << "=======================================" << endl;
     cyc  = env->drv->sig_gen->wait_rnd_gen();
@@ -425,6 +426,7 @@ void functional_cov::print_cov(){
     intf_int->done = 1;
     // Just wait for few cycles
   }
+
 
 // ********** READ AFTER RESET ************ //
 // Reads data after reset memory

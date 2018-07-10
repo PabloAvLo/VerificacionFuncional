@@ -115,9 +115,6 @@ SC_MODULE (scoreboard) {
     sc_fifo<sc_uint<8> > buLen_fifo (100); //n_cases);
     sc_fifo<sc_uint<32> > data_fifo (100); //n_cases);
   }
-
-  // Can search address, data and burstLenghts
-  int search(int value_to_search);
 };
 
 // ***************** CONSTRAINS ***************** //
@@ -217,6 +214,7 @@ SC_MODULE (signal_generator) {
   }
 };
 
+<<<<<<< HEAD
 // **************** DRIVER **************** //
 SC_MODULE (driver) {
 
@@ -242,6 +240,8 @@ SC_MODULE (driver) {
   void seq_read();
   void toggle();
 };
+=======
+>>>>>>> 117bf1d2ca3bc7f8b030a33d0acb036416220026
 
 // **************** MONITOR **************** //
 SC_MODULE (monitor) {
@@ -294,10 +294,35 @@ SC_MODULE (checker) {
     mnt_int = mnt_ext;
   }
 
-  void verify(int mnt_value, string pass_msg);
+  void verify(int type,sc_dt::sc_uint<32> mnt_value);
 
 };
 
+// **************** DRIVER **************** //
+SC_MODULE (driver) {
+
+  interface *intf_int;
+  scoreboard *scb_int;
+  signal_generator *sig_gen;
+  checker *check;
+
+  SC_HAS_PROCESS(driver);
+  driver(sc_module_name driver, scoreboard *scb_ext, interface *intf_ext) {
+
+    //Interface
+    intf_int = intf_ext;
+    //Scoreboard
+    scb_int = scb_ext;
+  }
+
+  void config();
+  void init(unsigned long long);
+  void reset();
+  void write(sc_uint<32> address, sc_uint<8> burstLenght, sc_uint<32> data);
+  void rnd_write();
+  void read(sc_uint<32> address, sc_uint<8> burstLenght);
+  void seq_read();
+};
 
 // **************** ENVIROMENT **************** //
 SC_MODULE (environment) {
@@ -315,12 +340,12 @@ SC_MODULE (environment) {
     intf_int = intf_ext;
     // Scoreboard
     scb = new scoreboard("scb");
-    // Driver
-    drv = new driver("drv",scb,intf_ext);
     // Monitor
     mnt = new monitor("mnt",intf_ext);
     // Checker
-    check = new checker("check",scb,mnt,intf_ext);
+    //check = new checker("check",scb,mnt,intf_ext);
+    // Driver
+    drv = new driver("drv",scb,intf_ext);
     // Functional Coverage
     cov = new functional_cov("cov",intf_ext);
 
@@ -503,7 +528,11 @@ SC_MODULE (sc_tb) {
   SC_CTOR(sc_tb) {
     intf  = new interface("intf");
     // test1 = new base_test("test1",intf);
+<<<<<<< HEAD
     // test2 = new basic_func("test2",intf);
+=======
+    test2 = new basic_func("test2",intf);
+>>>>>>> 117bf1d2ca3bc7f8b030a33d0acb036416220026
     // test3 = new rd_after_rst("test3",intf);
     // test4 = new overwrite("test4",intf);
     // test5 = new cross_over("test5",intf);

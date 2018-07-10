@@ -240,6 +240,7 @@ SC_MODULE (driver) {
   void rnd_write();
   void read(sc_uint<32> address, sc_uint<8> burstLenght);
   void seq_read();
+  void toggle();
 };
 
 // **************** MONITOR **************** //
@@ -466,6 +467,26 @@ SC_MODULE (usg_4_banks) {
   }
 };
 
+// ******** TOGGLE SIGNALS ********* //
+SC_MODULE (toggle_sig) {
+
+  interface *intf_int;
+  environment *env;
+  string name;
+
+  void test ();
+
+  SC_HAS_PROCESS(toggle_sig);
+  toggle_sig(sc_module_name toggle_sig, interface *intf_ext) {
+    intf_int = intf_ext;
+    //environment
+    name = "TOGGLE SIGNALS";
+    env = new environment("env",intf_ext);
+    SC_CTHREAD(test,intf_ext->wb_clk_i.pos());
+
+  }
+};
+
 // *********** SYSTEM C TEST BENCH ************ //
 SC_MODULE (sc_tb) {
 
@@ -476,17 +497,19 @@ SC_MODULE (sc_tb) {
   cross_over    *test5;
   rnd_wr_rd     *test6;
   usg_4_banks   *test7;
+  toggle_sig    *test8;
   interface     *intf;
 
   SC_CTOR(sc_tb) {
     intf  = new interface("intf");
     // test1 = new base_test("test1",intf);
     // test2 = new basic_func("test2",intf);
-    test3 = new rd_after_rst("test3",intf);
+    // test3 = new rd_after_rst("test3",intf);
     // test4 = new overwrite("test4",intf);
     // test5 = new cross_over("test5",intf);
     // test6 = new rnd_wr_rd("test6",intf);
     // test7 = new usg_4_banks("test7",intf);
+    test8 = new toggle_sig("test8",intf);
   }
 };
 

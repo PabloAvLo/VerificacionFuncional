@@ -4,13 +4,13 @@
      8 ->  8 bit SDRAM Mode
     16 -> 16 bit SDRAM Mode
     32 -> 32 bit SDRAM Mode   */
-#define SDR_DW   32
+#define SDR_DW   8
 
 /*  SDRAM BYTE Width Selection:
     1 ->  8 bit SDRAM Mode
     2 -> 16 bit SDRAM Mode
     4 -> 32 bit SDRAM Mode   */
-#define SDR_BW   4
+#define SDR_BW   1
 
 #define DW       32 // Data width
 #define APP_AW   26 // Application Address Width

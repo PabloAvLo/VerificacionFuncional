@@ -18,6 +18,38 @@ void driver::config() {
     wait(1);
 }
 
+// ************** DRIVER TOGGLE ************** //
+void driver::toggle() {
+    intf_int->cfg_sdr_width    = 0b0;
+    intf_int->cfg_colbits      = 0b00;
+    intf_int->cfg_req_depth    = 0;
+    intf_int->cfg_sdr_en       = 0;
+    intf_int->cfg_sdr_mode_reg = 0x0;
+    intf_int->cfg_sdr_tras_d   = 0x0;
+    intf_int->cfg_sdr_trp_d    = 0;
+    intf_int->cfg_sdr_trcd_d   = 0;
+    intf_int->cfg_sdr_cas      = 0;
+    intf_int->cfg_sdr_trcar_d  = 0;
+    intf_int->cfg_sdr_twr_d    = 0;
+    intf_int->cfg_sdr_rfsh     = 0x00;
+    intf_int->cfg_sdr_rfmax    = 0;
+    wait(2);
+    intf_int->cfg_sdr_width    = 0b11;
+    intf_int->cfg_colbits      = 0b11;
+    intf_int->cfg_req_depth    = 0b11;
+    intf_int->cfg_sdr_en       = 1;
+    intf_int->cfg_sdr_mode_reg = 0x1fff;
+    intf_int->cfg_sdr_tras_d   = 0xf;
+    intf_int->cfg_sdr_trp_d    = 0xf;
+    intf_int->cfg_sdr_trcd_d   = 0xf;
+    intf_int->cfg_sdr_cas      = 0b11;
+    intf_int->cfg_sdr_trcar_d  = 0xf;
+    intf_int->cfg_sdr_twr_d    = 0xf;
+    intf_int->cfg_sdr_rfsh     = 0xfff;
+    intf_int->cfg_sdr_rfmax    = 0b11;
+    wait(2);
+}
+
 // ************** DRIVER INIT **************** //
 void driver::init(unsigned long long seed) {
     driver::config();
@@ -633,3 +665,46 @@ void functional_cov::print_cov(){
     intf_int->done = 1;
     // Just wait for few cycles
   }
+
+  // ************* TOGGLE SIGNALS ************ //
+  // Toggle some signals for transition coverage
+    void toggle_sig::test() {
+      intf_int->done = 0;
+
+      sc_uint<4>  cyc  = 0x0;
+
+      // Initialization
+      env->scb->n_cases = 1; // Max number of r/w to do
+      unsigned long long seed =  scv_random::pick_random_seed();
+      cout << "=======================================" << endl;
+      cout<<"TEST: "<< name << endl;
+      cout<<"SEED: "<< cout.precision(30) << seed << endl;
+      cout << "=======================================" << endl;
+      env->drv->toggle();
+      cyc  = env->drv->sig_gen->wait_rnd_gen();
+      wait(cyc);
+      env->drv->init(seed);
+      cyc  = env->drv->sig_gen->wait_rnd_gen();
+      wait(cyc);
+
+      // Write
+      env->drv->rnd_write();
+      //env->drv->write(0x40000, 1,  4294967295);
+      cyc = env->drv->sig_gen->wait_rnd_gen();
+      wait(cyc);
+
+      // Read
+      env->drv->seq_read();
+      cyc  = env->drv->sig_gen->wait_rnd_gen();
+      wait(cyc);
+
+      // Request for simulation termination
+      cout << "=======================================" << endl;
+      cout << " SIMULATION END" << endl;
+      cout << "=======================================" << endl;
+      cyc  = env->drv->sig_gen->wait_rnd_gen();
+      wait(cyc);
+      env->cov->print_cov();
+      intf_int->done = 1;
+      // Just wait for few cycles
+    }
